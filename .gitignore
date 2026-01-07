@@ -31,5 +31,6 @@ htmlcov/
 # Local configuration
 .env
 
-# Datasets
+# Datasets and database
 /data
+/chroma_store

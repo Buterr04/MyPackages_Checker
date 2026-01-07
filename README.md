@@ -5,7 +5,7 @@ main.py: 主程序
 database.py: 数据库操作，涉及向量数据库的增删改查
 search.py: 向量数据库搜索
 chromademo.py: Chroma数据库操作演示
-agent/demo.py: Gemini Agent操作演示
+gemini_vision.py: Gemini 多模态图像识别
 
 ## 详细说明
 database.py
