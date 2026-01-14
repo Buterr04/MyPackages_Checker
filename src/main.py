@@ -1,6 +1,7 @@
 from database import add_txt_file,read_docs, update_doc, delete_doc, persist
 from search import vector_store
 from search import search
+import json
 import os
 
 from langchain.tools import tool
@@ -13,6 +14,16 @@ from gemini_vision import vision_result
 os.environ["GOOGLE_API_KEY"] = "AIzaSyBDHO0gEX4nN3IMefqloQ1V7k7ULVtac80"
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+
+
+def _extract_text(content):
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        snippets = [item.get("text", "") for item in content if isinstance(item, dict) and "text" in item]
+        if snippets:
+            return "\n".join(snippets)
+    return str(content)
 
 
 # RAG Tools, from official docs
@@ -47,10 +58,25 @@ agent = create_agent(
 
 
 # 使用
-query = ("这个包裹是否应该赔付？"
-         "包裹的损坏情况如下："
-         f"{vision_result.content}")
+damage_description = vision_result.content
+if not isinstance(damage_description, str):
+    damage_description = json.dumps(damage_description, ensure_ascii=False)
 
+query = (
+    "这个包裹是否应该赔付？"
+    "包裹的损坏情况如下："
+    f"{damage_description}"
+)
 result = agent.invoke({"messages": [HumanMessage(content=query)]})
 
-print(result)
+if isinstance(result, dict):
+    if "output" in result and isinstance(result["output"], str):
+        print(result["output"])
+    elif "messages" in result and result["messages"]:
+        last_message = result["messages"][-1]
+        content = getattr(last_message, "content", last_message)
+        print(_extract_text(content))
+    else:
+        print(result)
+else:
+    print(_extract_text(result))
