@@ -21,8 +21,13 @@ vector_store = Chroma(
 # TODO: to add documnets with input
 # Actually we do not need to add documents because we already have a database
 # We only need to add documents when we are developing the system for the first time
-add_txt_file("rules.txt")
-add_txt_file("requirements.txt")
+
+folder_path = "docs"
+for filename in os.listdir(folder_path):
+    if filename.endswith(".txt"):
+        file_path = os.path.join(folder_path, filename)
+        add_txt_file(file_path)
+        print(f"已添加文件: {filename}")
 
 # search function to find documents
 # TODO: add another search function file, do not mix search and add document functions
