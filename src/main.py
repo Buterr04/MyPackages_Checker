@@ -63,7 +63,10 @@ if not isinstance(damage_description, str):
     damage_description = json.dumps(damage_description, ensure_ascii=False)
 
 query = (
-    "这个包裹是否应该赔付？"
+    "这个包裹是否应该赔付？" \
+    "你需要自己根据检索结果进行决策并给出结果" \
+    "我不能给你任何帮助信息，除了下面的描述。" \
+    "不要询问我任何问题，自己决策"
     "包裹的损坏情况如下："
     f"{damage_description}"
 )
