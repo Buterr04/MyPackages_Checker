@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Packages Checker</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #111a2e;
+      --accent: #5ce1e6;
+      --text: #f4f7fb;
+      --muted: #8ba0c2;
+      --border: #1e2a44;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(92,225,230,0.1), transparent 35%),
+                  radial-gradient(circle at 80% 0%, rgba(92,225,230,0.12), transparent 30%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 16px 48px;
+      display: flex;
+      justify-content: center;
+    }
+    .shell {
+      width: min(1200px, 100%);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      gap: 12px;
+    }
+    h1 { margin: 0; font-size: 28px; letter-spacing: 0.02em; }
+    .hint { color: var(--muted); font-size: 14px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: linear-gradient(145deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.25);
+      backdrop-filter: blur(6px);
+    }
+    label { display: block; color: var(--muted); margin-bottom: 6px; font-size: 14px; }
+    textarea, input[type="file"], button {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0f1728;
+      color: var(--text);
+      padding: 12px;
+      font-size: 15px;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+    textarea { min-height: 160px; resize: vertical; }
+    input[type="file"] { padding: 10px; }
+    button {
+      cursor: pointer;
+      background: linear-gradient(120deg, #5ce1e6, #7cf1c4);
+      color: #0b1220;
+      border: none;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      box-shadow: 0 10px 20px rgba(92,225,230,0.25);
+    }
+    button:hover { box-shadow: 0 12px 26px rgba(92,225,230,0.35); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    textarea:focus, input[type="file"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(92,225,230,0.2); }
+    pre {
+      background: #0f1728;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 14px;
+      color: #e7ecf5;
+    }
+    .row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+    .tag { padding: 4px 10px; border-radius: 999px; background: rgba(92,225,230,0.1); color: var(--accent); border: 1px solid rgba(92,225,230,0.4); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <h1>Packages Checker</h1>
+        <div class="hint">Describe damage or upload an image, then run assessment.</div>
+      </div>
+      <div class="tag">FastAPI</div>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <div class="row"><h3>Text assess</h3><span class="tag">/assess</span></div>
+        <form id="text-form">
+          <label for="description">Damage description</label>
+          <textarea id="description" name="description" placeholder="e.g. Box corner crushed, seal broken, inner items exposed"></textarea>
+          <div style="margin-top:12px; display:flex; gap:8px;">
+            <button type="submit" id="text-submit">Assess</button>
+          </div>
+        </form>
+        <div style="margin-top:12px;">
+          <label>Result</label>
+          <pre id="text-result">Waiting...</pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row"><h3>Image assess</h3><span class="tag">/vision-assess</span></div>
+        <form id="vision-form">
+          <label for="image">Upload image (jpg/png/webp)</label>
+          <input type="file" id="image" name="image" accept="image/*" />
+          <div style="margin-top:12px; display:flex; gap:8px;">
+            <button type="submit" id="vision-submit">Analyze & Assess</button>
+          </div>
+        </form>
+        <div style="margin-top:12px;">
+          <label>Vision analysis</label>
+          <pre id="vision-analysis">Waiting...</pre>
+          <label>Assessment</label>
+          <pre id="vision-result">Waiting...</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const textForm = document.getElementById("text-form");
+    const textResult = document.getElementById("text-result");
+    const textSubmit = document.getElementById("text-submit");
+
+    const visionForm = document.getElementById("vision-form");
+    const visionAnalysis = document.getElementById("vision-analysis");
+    const visionResult = document.getElementById("vision-result");
+    const visionSubmit = document.getElementById("vision-submit");
+
+    async function handleTextSubmit(e) {
+      e.preventDefault();
+      const description = document.getElementById("description").value.trim();
+      if (!description) {
+        textResult.textContent = "Please enter a description.";
+        return;
+      }
+      textSubmit.disabled = true;
+      textResult.textContent = "Running...";
+      try {
+        const res = await fetch("/assess", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ description }),
+        });
+        const data = await res.json();
+        textResult.textContent = res.ok ? data.result || JSON.stringify(data) : data.detail || "Error";
+      } catch (err) {
+        textResult.textContent = err.message || String(err);
+      } finally {
+        textSubmit.disabled = false;
+      }
+    }
+
+    async function handleVisionSubmit(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById("image");
+      const file = fileInput.files[0];
+      if (!file) {
+        visionAnalysis.textContent = "Please choose an image.";
+        return;
+      }
+      visionSubmit.disabled = true;
+      visionAnalysis.textContent = "Analyzing image...";
+      visionResult.textContent = "Assessing...";
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const res = await fetch("/vision-assess", { method: "POST", body: formData });
+        const data = await res.json();
+        if (res.ok) {
+          const analysis = data.analysis || {};
+          const raw = analysis.raw ?? analysis;
+          visionAnalysis.textContent = raw ? JSON.stringify(raw, null, 2) : JSON.stringify(analysis, null, 2);
+          visionResult.textContent = data.result || JSON.stringify(data, null, 2);
+        } else {
+          visionAnalysis.textContent = data.detail || "Error";
+          visionResult.textContent = data.detail || "Error";
+        }
+      } catch (err) {
+        visionAnalysis.textContent = err.message || String(err);
+        visionResult.textContent = err.message || String(err);
+      } finally {
+        visionSubmit.disabled = false;
+      }
+    }
+
+    textForm.addEventListener("submit", handleTextSubmit);
+    visionForm.addEventListener("submit", handleVisionSubmit);
+  </script>
+</body>
+</html>
