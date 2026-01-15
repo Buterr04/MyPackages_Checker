@@ -1,15 +1,14 @@
 # Packages Checker
 
-## src files
-main.py: 主程序
-
-database.py: 数据库操作，涉及向量数据库的增删改查
-
-search.py: 向量数据库搜索
-
-chromademo.py: Chroma数据库操作演示
-
-gemini_vision.py: Gemini 多模态图像识别
+## 项目结构
+- `src/`：源代码目录
+    - `FastApi.py`：FastAPI 应用主文件
+    - `gemini_vision.py`：调用 Gemini Vision API 的封装
+    - `database.py`：向量数据库操作
+    - `main.py`：核心逻辑与评估函数
+    - `search.py`：向量检索相关功能
+- `front_end/`：前端单页文件
+- `requirements.txt`：依赖列表
 
 
 ## 运行 FastAPI 服务
@@ -27,16 +26,4 @@ gemini_vision.py: Gemini 多模态图像识别
 - `POST /vision-assess`：上传图片，先分析再输出赔付判定
 - `POST /docs`：请求体 `{ "id": "doc-id", "content": "文本内容", "metadata": {..可选..} }`，写入/更新到向量库并持久化
 
-## 详细说明
-database.py
-- read_docs: 读取所有文档
-- update_doc: 更新指定文档
-- delete_doc: 删除指定文档
-- persist: 持久化数据库
-- add_txt_file: 从txt文件添加文档到数据库
-
-调用方法：
-```python
-from src.database import add_txt_file
-add_txt_file("path/to/your/file.txt")
-```
+Made with ❤️ by Buterr
