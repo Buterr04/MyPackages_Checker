@@ -132,6 +132,25 @@
           <pre id="vision-result">Waiting...</pre>
         </div>
       </div>
+
+      <div class="card">
+        <div class="row"><h3>Add document</h3><span class="tag">/docs</span></div>
+        <form id="doc-form">
+          <label for="doc-id">Document ID</label>
+          <input type="text" id="doc-id" name="doc-id" placeholder="policy-001" />
+          <label for="doc-content" style="margin-top:8px;">Content</label>
+          <textarea id="doc-content" name="doc-content" placeholder="赔付规则或说明文本"></textarea>
+          <label for="doc-meta" style="margin-top:8px;">Metadata (JSON，可选)</label>
+          <textarea id="doc-meta" name="doc-meta" placeholder='{"source":"manual"}'></textarea>
+          <div style="margin-top:12px; display:flex; gap:8px;">
+            <button type="submit" id="doc-submit">Add / Update</button>
+          </div>
+        </form>
+        <div style="margin-top:12px;">
+          <label>Result</label>
+          <pre id="doc-result">Waiting...</pre>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -144,6 +163,10 @@
     const visionAnalysis = document.getElementById("vision-analysis");
     const visionResult = document.getElementById("vision-result");
     const visionSubmit = document.getElementById("vision-submit");
+
+    const docForm = document.getElementById("doc-form");
+    const docSubmit = document.getElementById("doc-submit");
+    const docResult = document.getElementById("doc-result");
 
     async function handleTextSubmit(e) {
       e.preventDefault();
@@ -204,6 +227,39 @@
 
     textForm.addEventListener("submit", handleTextSubmit);
     visionForm.addEventListener("submit", handleVisionSubmit);
+
+    async function handleDocSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById("doc-id").value.trim();
+      const content = document.getElementById("doc-content").value.trim();
+      const metaRaw = document.getElementById("doc-meta").value.trim();
+      if (!id || !content) {
+        docResult.textContent = "Please provide id and content.";
+        return;
+      }
+      let metadata = undefined;
+      if (metaRaw) {
+        try { metadata = JSON.parse(metaRaw); }
+        catch (err) { docResult.textContent = "Metadata JSON invalid"; return; }
+      }
+      docSubmit.disabled = true;
+      docResult.textContent = "Submitting...";
+      try {
+        const res = await fetch("/docs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, content, metadata }),
+        });
+        const data = await res.json();
+        docResult.textContent = res.ok ? JSON.stringify(data, null, 2) : data.detail || "Error";
+      } catch (err) {
+        docResult.textContent = err.message || String(err);
+      } finally {
+        docSubmit.disabled = false;
+      }
+    }
+
+    docForm.addEventListener("submit", handleDocSubmit);
   </script>
 </body>
 </html>

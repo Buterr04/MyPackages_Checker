@@ -4,7 +4,7 @@ import base64
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable
+from typing import Dict, Iterable, Optional
 
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
@@ -14,8 +14,7 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 PERSIST_DIR = "chroma_store"
 COLLECTION_NAME = "foo"
 DEFAULT_API_KEY_B64 = "QUl6YVN5QkRITzBnRVg0bk4zSU1lZnFsb1ExVjd2azdVTFZ0YWM4MA=="
-
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env", override=False)
 
 
 def _get_api_key() -> str:
@@ -47,6 +46,21 @@ def add_txt_file(file_path: str):
 def add_documents(docs: Iterable[Document], ids: Iterable[str]):
     store = get_vector_store()
     store.add_documents(documents=list(docs), ids=list(ids))
+
+
+def upsert_text_doc(doc_id: str, content: str, metadata: Optional[Dict] = None, persist_after: bool = True):
+    if not doc_id:
+        raise ValueError("doc_id is required")
+    if not content:
+        raise ValueError("content is required")
+
+    store = get_vector_store()
+    metadata = metadata or {}
+    store.delete(ids=[doc_id])
+    doc = Document(page_content=content, metadata=metadata)
+    store.add_documents(documents=[doc], ids=[doc_id])
+    if persist_after:
+        store.persist()
 
 
 def read_docs(query: str, k: int = 2):

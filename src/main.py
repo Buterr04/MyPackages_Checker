@@ -4,6 +4,7 @@ import base64
 import json
 import os
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
@@ -16,9 +17,7 @@ from .database import get_vector_store
 
 
 DEFAULT_API_KEY_B64 = "QUl6YVN5QkRITzBnRVg0bk4zSU1lZnFsb1ExVjd2azdVTFZ0YWM4MA=="
-
-load_dotenv()
-
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env", override=False)
 
 def _get_api_key() -> str:
     api_key = os.getenv("GOOGLE_API_KEY")

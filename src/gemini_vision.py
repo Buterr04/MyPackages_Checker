@@ -4,24 +4,22 @@ import base64
 import json
 import os
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Dict
 
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.messages import HumanMessage
 
-DEFAULT_API_KEY = "YOUR_API_KEY"
-
-load_dotenv()
-
-os.environ["GOOGLE_API_KEY"] = DEFAULT_API_KEY
+DEFAULT_API_KEY_B64 = "QUl6YVN5QkRITzBnRVg0bk4zSU1lZnFsb1ExVjd2azdVTFZ0YWM4MA=="
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env", override=False)
 
 
 def _get_api_key() -> str:
     api_key = os.getenv("GOOGLE_API_KEY")
     if api_key:
         return api_key
-    return DEFAULT_API_KEY
+    return base64.b64decode(DEFAULT_API_KEY_B64).decode("utf-8")
 
 
 @lru_cache(maxsize=1)

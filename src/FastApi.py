@@ -9,12 +9,13 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
+from .database import upsert_text_doc
 from .gemini_vision import analyze_image_bytes
 from .main import assess_package
 from .search import bootstrap_vector_store
 
 app = FastAPI(title="Packages Checker API")
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env", override=False)
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "front_end"
 INDEX_FILE = FRONTEND_DIR / "index.html"
@@ -33,6 +34,12 @@ class VisionAssessResponse(BaseModel):
     result: str
 
 
+class AddDocRequest(BaseModel):
+    id: str
+    content: str
+    metadata: dict | None = None
+
+
 @app.on_event("startup")
 async def _startup():
     # Load default txt rules into the vector store if missing
@@ -49,6 +56,15 @@ async def index():
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.post("/docs")
+async def add_doc(payload: AddDocRequest):
+    try:
+        upsert_text_doc(payload.id, payload.content, payload.metadata or {})
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"id": payload.id, "message": "ok"}
 
 
 @app.post("/assess", response_model=AssessResponse)
