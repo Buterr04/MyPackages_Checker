@@ -36,7 +36,7 @@ def _build_prompt(image_base64: str) -> HumanMessage:
                 "type": "text",
                 "text": (
                     "Check this image and describe if this package is damaged or not. "
-                    "If it is damaged, tell me where is the damage."
+                    "If it is damaged, tell me where is the damage,for example: 'top left corner', or 'inside the box', etc. "
                     "Combine the damaged areas with the whole package,"
                     "give me the percentages."
                     "Return ONLY a JSON object with no markdown."

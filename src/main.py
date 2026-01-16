@@ -71,17 +71,31 @@ def get_agent():
     )
 
 
-def assess_package(description: str) -> str:
+def assess_package(
+    description: str,
+    insured: bool | None = None,
+    full_insured: bool | None = None,
+) -> str:
     if not description:
         raise ValueError("description is required")
 
     agent = get_agent()
+    insurance_status = (
+        "未提供保价信息" if insured is None else "已完成保价" if insured else "未完成保价"
+    )
+    full_insurance_status = (
+        "未提供足额保价信息" if full_insured is None else "已足额保价" if full_insured else "未足额保价"
+    )
     query = (
         "这个包裹是否应该赔付？"
         "你需要自己根据检索结果进行决策并给出结果。"
         "我不能给你任何帮助信息，除了下面的描述。"
         "不要询问我任何问题，自己决策。" \
-        "只给出结果和文档依据，不要多余的解释内容"
+        "只给出结果和文档依据，不要多余的解释内容。"
+        "保价情况："
+        f"{insurance_status}\n"
+        "足额保价情况："
+        f"{full_insurance_status}\n"
         "包裹的损坏情况如下："
         f"{description}"
     )

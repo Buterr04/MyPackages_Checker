@@ -23,6 +23,8 @@ INDEX_FILE = FRONTEND_DIR / "index.html"
 
 class AssessRequest(BaseModel):
     description: str
+    insured: bool | None = None
+    full_insured: bool | None = None
 
 
 class AssessResponse(BaseModel):
@@ -70,7 +72,7 @@ async def add_doc(payload: AddDocRequest):
 @app.post("/assess", response_model=AssessResponse)
 async def assess(payload: AssessRequest):
     try:
-        result = assess_package(payload.description)
+        result = assess_package(payload.description, payload.insured, payload.full_insured)
     except Exception as exc:  # surface friendly errors to client
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"result": result}
@@ -91,12 +93,16 @@ async def vision(file: UploadFile = File(...)):
 
 
 @app.post("/vision-assess", response_model=VisionAssessResponse)
-async def vision_assess(file: UploadFile = File(...)):
+async def vision_assess(
+    file: UploadFile = File(...),
+    insured: bool | None = None,
+    full_insured: bool | None = None,
+):
     analysis = await vision(file)  # reuse validation and parsing
     raw = analysis.get("raw") if isinstance(analysis, dict) else analysis
     description = raw if isinstance(raw, str) else json.dumps(raw, ensure_ascii=False)
     try:
-        result = assess_package(description)
+        result = assess_package(description, insured, full_insured)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"analysis": analysis, "result": result}
