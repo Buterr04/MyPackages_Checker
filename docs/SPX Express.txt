@@ -1,0 +1,135 @@
+I. COMPLAINT HANDLING POLICY
+
+1. Complaint Resolution Process
+
+Upon receiving a complaint regarding the quality of postal services involving shipments handled by SPX Express, we will review and address the issue according to this procedure.
+2. Principles of Complaint Resolution
+
+Complaints will be handled by legal timeframes and regulations, ensuring the rights and interests of our customers.
+SPX Express prioritizes resolving complaints through mutual agreement and goodwill-based negotiation.
+3. How to File a Complaint
+
+Customers can submit complaints via email (cskh@spx.vn), through the live chat feature on https://spx.vn, or by sending a written request regarding the provided services.
+4. Conditions for Accepting Complaints
+
+The complainant must be a service user with a valid contract (paper, electronic, or equivalent) or a legally authorized representative.
+The complaint must be filed within the allowable timeframe.
+For shipment-related complaints, package contents must be declared, and the item must not violate any prohibited or restricted shipping regulations.
+5. Statute of Limitations
+
+ 6 months from the completion date of delivery for complaints regarding lost or delayed shipments.\
+1 month from the delivery date for complaints about damaged goods, pricing, or other related matters.
+6. Complaint Intake
+
+SPX Express will handle complaints according to the above process.
+If a complaint is not accepted, SPX Express will notify the complainant via email and/or phone within 5 working days, stating the reason for refusal.
+7. Resolution Timeframe
+
+Complaints related to domestic postal services will be resolved within 2 months from the date of receipt.
+8. Complaint Handling Steps
+
+Step 1: Submit the complaint
+Customers send their complaints to SPX Express, along with supporting documents such as photos or videos if available.
+Step 2: Complaint Investigation
+SPX Express collects relevant information to make a decision. Resolution time will not exceed 1 month (working days) from the date of receipt.
+For shipment quality complaints:
+ Within 3 working days, SPX Express will request the sender to provide relevant information. The sender must respond within 3 working days or request an extension (not exceeding 10 working days total). 
+ SPX Express will verify the matter and determine responsibility within 20 working days.
+ A final decision will be issued within 3 working days after the investigation ends.
+Step 3: Notification of Resolution
+SPX Express will notify the complainant and related parties via email.
+If the complainant agrees with the resolution, the case is considered closed. Otherwise, the complainant has the right to seek legal resolution in accordance with applicable laws.
+II. COMPENSATION LIABILITY POLICY
+
+1. Compensation Principles
+
+a. Compensation for lost, damaged, or completely tampered shipments will be determined based on the maximum liability limit for that service.
+b. Compensation for partial loss, damage, or tampering is based on the actual damage, but shall not exceed the total liability limit, unless otherwise agreed by both parties.
+c. Compensation shall be paid in Vietnamese Dong in a one-time payment, unless otherwise agreed.
+d. Compensation amounts cannot be converted into other forms of value.
+e. SPX Express does not compensate for indirect damages or lost profits arising from service quality issues beyond what was committed.
+f. Compensation levels are publicly announced and applied by SPX Express, and shall not be lower than the minimum set by competent authorities.
+g. SPX Express is not liable for compensation in the following cases:
+Services without proof of shipment acceptance.
+Customers cannot provide proof of service usage with SPX Express.
+Shipments are confiscated or destroyed by authorities due to inaccurate or unclear declarations or violations of applicable regulations.
+Loss or damage caused by the sender’s fault.
+Other cases as stipulated by law.
+h. In cases where the shipment falls under SPX Express’s list of prohibited items, SPX reserves the right to handle such shipments according to internal policy and in compliance with Vietnamese law. SPX is fully exempt from liability, and the customer is responsible for all arising damages, including but not limited to injury or property damage, transportation costs, storage fees, and administrative penalties.
+2. Determining the Value of Goods for Compensation
+
+The compensation value is determined based on the lower of the following:
+a. Declared value of the shipment;
+b. The value stated in valid documents proving the shipment's worth, which must specify the shipment content. Valid documents include:
+A valid VAT invoice for businesses using the credit method;
+A valid sales invoice for businesses/households using the direct method;
+Customs declaration documents for imported goods;
+Internal transfer note/delivery receipt with product name and value, signed by both seller and buyer;
+Screenshots/videos of transaction details, or bank receipts showing matching sender/receiver info, product content, value, and transaction time before shipment;
+Text messages containing similar transaction details;
+Or other valid documents as determined by SPX Express.
+c. In any case, compensation shall not be less than four (04) times the applicable service fee.
+3. Compensation Levels
+
+3.1. Compensation for Failure to Meet Declared Delivery Time
+If SPX Express fails to meet the declared delivery time and the customer can provide proof, SPX Express will refund the service fee.
+3.2. For Shipments Consisting of Letters, Documents, or Publications
+In the event of complete loss, damage, or tampering: compensation equals four (04) times the service fee (including refund of the paid fee).
+3.3. For Shipments Excluding Letters, Documents, or Publications
+a. Complete loss, damage, or tampering:
+Declared value + proof provided: Compensation equals 100% of shipment value, up to 20,000,000 VND, and not less than 4 times the service fee.
+Declared value but no proof: Compensation up to 100% of declared value, but not exceeding 2,000,000 VND.
+No declared value but proof provided: Compensation up to 100% of documented value, not exceeding 2,000,000 VND.
+No declared value and no proof provided: Compensation equals 4 times the service fee.
+b. Partial loss, damage, or tampering:
+No product-level proof: Compensation equals 4 times the service fee.
+Product-level proof available: Compensation up to 100% of the proven value of affected items, not exceeding the total shipment value and not more than 20,000,000 VND.
+In such cases, both the compensation level and the party entitled to retain the shipment will be determined based on a detailed assessment table provided by SPX Express.
+Type of Damage
+Compensation Rate
+Party Retaining the Product
+Torn, broken, or wet manufacturer’s packaging resulting in product damage
+5% of the total value of the parcel
+Customer
+Tamper seal of manufacturer is broken
+10% of the value of the damaged product in the parcel
+Customer
+Electronic warranty activated or device powered on
+20% of the value of the damaged product in the parcel
+Customer
+Missing accessories
+20% of the value of the damaged product in the parcel
+Customer
+Product is broken or damaged over 30% of its value
+100% of the value of the damaged product in the parce
+SPX
+Determining Compensation Percentage
+The stated compensation rates represent the maximum allowable amount, not the default rate.
+The final rate may be lower depending on the actual level of damage, and will only reach the maximum rate if all relevant conditions are met.
+Shipment value is determined in accordance with Section 2 of this policy.
+Damage Threshold Criteria (Over 30%):
+The number of damaged components exceeds 30% of the total shipment contents; and
+The sender must incur repair or replacement costs in order to reuse or resell the shipment.
+4. Compensation Timeline
+
+a. Compensation will be paid within 30 days from the date both parties confirm liability and the sender provides valid documents proving shipment value (if applicable).
+b. If compensation is delayed beyond this timeframe, SPX Express will pay interest of 6% per annum for the overdue period.
+5. Reclaiming Compensation
+
+a. If part or all of the shipment previously considered lost (and compensated) is later recovered, SPX Express will notify the compensated party.
+b. The compensated party may accept or decline the recovered items.
+c. If accepted, the customer must return the compensation amount equivalent to the value of the recovered items.
+d. If declined, ownership of the recovered shipment transfers to SPX Express.
+Note: For damaged shipments, compensation is based on the actual degree of damage. SPX Express is not liable for incorrectly declared values if the customer misstates or omits shipment details during order placement.
+6. Disclaimer of Liability
+
+SPX Express shall not be held liable—whether due to negligence (active or passive), legal, contractual, or other obligations—for damages arising from:
+The customer's failure to comply with postal laws or regulations related to restricted or prohibited items (e.g. lack of valid invoices, confiscation by authorities, or destruction of the shipment due to non-compliance).
+The customer's failure to follow SPX Express’s policies or terms of service.
+The customer’s negligence, misrepresentation, fraud, or failure to declare shipment contents accurately; improper or non-compliant packaging; incomplete recipient information; or failure to provide proof of service usage with SPX Express.
+The inherent nature or defects of the goods themselves, or cases where the customer refuses to receive the returned shipment and SPX Express has attempted delivery at least three (03) times. In such cases, the customer acknowledges that they forfeit any right or claim to the shipment or its contents. - SPX Express shall be exempt from all related liability or disputes.
+Force majeure events as defined by Vietnamese law.
+7. General Provision
+
+In the event of any conflict between this policy and other terms or agreements of SPX Express, the terms of this policy shall prevail.
+Effective Date: October 28, 2024
