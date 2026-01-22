@@ -21,16 +21,6 @@ FRONTEND_DIR = Path(__file__).resolve().parent.parent / "front_end"
 INDEX_FILE = FRONTEND_DIR / "index.html"
 
 
-class AssessRequest(BaseModel):
-    description: str
-    insured: bool | None = None
-    full_insured: bool | None = None
-
-
-class AssessResponse(BaseModel):
-    result: str
-
-
 class VisionAssessResponse(BaseModel):
     analysis: Any
     result: str
@@ -67,15 +57,6 @@ async def add_doc(payload: AddDocRequest):
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"id": payload.id, "message": "ok"}
-
-
-@app.post("/assess", response_model=AssessResponse)
-async def assess(payload: AssessRequest):
-    try:
-        result = assess_package(payload.description, payload.insured, payload.full_insured)
-    except Exception as exc:  # surface friendly errors to client
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return {"result": result}
 
 
 @app.post("/vision")

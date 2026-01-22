@@ -20,8 +20,7 @@
 
 ### API
 - `GET /health`：健康检查
-- `GET /`：前端单页（文本与图片评估）
-- `POST /assess`：请求体 `{ "description": "..." }`，返回赔付判定
+ - `GET /`：前端单页（图片评估与规则文档维护）
 - `POST /vision`：上传图片文件，返回图像分析 JSON
 - `POST /vision-assess`：上传图片，先分析再输出赔付判定
 - `POST /docs`：请求体 `{ "id": "doc-id", "content": "文本内容", "metadata": {..可选..} }`，写入/更新到向量库并持久化

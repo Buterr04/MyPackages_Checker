@@ -95,39 +95,12 @@
     <header>
       <div>
         <h1>Packages Checker</h1>
-        <div class="hint">Describe damage or upload an image, then run assessment.</div>
+        <div class="hint">Upload an image to analyze damage，或维护/扩展规则文档。</div>
       </div>
       <div class="tag">FastAPI</div>
     </header>
 
     <div class="grid">
-      <div class="card">
-        <div class="row"><h3>Text assess</h3><span class="tag">/assess</span></div>
-        <form id="text-form">
-          <label for="description">Damage description</label>
-          <textarea id="description" name="description" placeholder="e.g. Box corner crushed, seal broken, inner items exposed"></textarea>
-          <label for="insured" style="margin-top:8px;">是否保价</label>
-          <select id="insured" name="insured">
-            <option value="">未提供</option>
-            <option value="true">是</option>
-            <option value="false">否</option>
-          </select>
-          <label for="full-insured" style="margin-top:8px;">是否足额保价</label>
-          <select id="full-insured" name="full-insured">
-            <option value="">未提供</option>
-            <option value="true">是</option>
-            <option value="false">否</option>
-          </select>
-          <div style="margin-top:12px; display:flex; gap:8px;">
-            <button type="submit" id="text-submit">Assess</button>
-          </div>
-        </form>
-        <div style="margin-top:12px;">
-          <label>Result</label>
-          <pre id="text-result">Waiting...</pre>
-        </div>
-      </div>
-
       <div class="card">
         <div class="row"><h3>Image assess</h3><span class="tag">/vision-assess</span></div>
         <form id="vision-form">
@@ -179,12 +152,6 @@
   </div>
 
   <script>
-    const textForm = document.getElementById("text-form");
-    const textResult = document.getElementById("text-result");
-    const textSubmit = document.getElementById("text-submit");
-    const insuredSelect = document.getElementById("insured");
-    const fullInsuredSelect = document.getElementById("full-insured");
-
     const visionForm = document.getElementById("vision-form");
     const visionAnalysis = document.getElementById("vision-analysis");
     const visionResult = document.getElementById("vision-result");
@@ -200,32 +167,6 @@
       if (value === "true") return true;
       if (value === "false") return false;
       return null;
-    }
-
-    async function handleTextSubmit(e) {
-      e.preventDefault();
-      const description = document.getElementById("description").value.trim();
-      if (!description) {
-        textResult.textContent = "Please enter a description.";
-        return;
-      }
-      const insured = parseOptionalBool(insuredSelect.value);
-      const fullInsured = parseOptionalBool(fullInsuredSelect.value);
-      textSubmit.disabled = true;
-      textResult.textContent = "Running...";
-      try {
-        const res = await fetch("/assess", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ description, insured, full_insured: fullInsured }),
-        });
-        const data = await res.json();
-        textResult.textContent = res.ok ? data.result || JSON.stringify(data) : data.detail || "Error";
-      } catch (err) {
-        textResult.textContent = err.message || String(err);
-      } finally {
-        textSubmit.disabled = false;
-      }
     }
 
     async function handleVisionSubmit(e) {
@@ -265,7 +206,6 @@
       }
     }
 
-    textForm.addEventListener("submit", handleTextSubmit);
     visionForm.addEventListener("submit", handleVisionSubmit);
 
     async function handleDocSubmit(e) {
