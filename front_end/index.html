@@ -94,17 +94,17 @@
   <div class="shell">
     <header>
       <div>
-        <h1>Packages Checker</h1>
-        <div class="hint">Upload an image to analyze damage，或维护/扩展规则文档。</div>
+        <h1>Packages Checker包裹检测器</h1>
+        <div class="hint">上传图像进行检测，或维护/扩展规则文档。</div>
       </div>
       <div class="tag">FastAPI</div>
     </header>
 
     <div class="grid">
       <div class="card">
-        <div class="row"><h3>Image assess</h3><span class="tag">/vision-assess</span></div>
+        <div class="row"><h3>图像评估</h3><span class="tag">/vision-assess</span></div>
         <form id="vision-form">
-          <label for="image">Upload image (jpg/png/webp)</label>
+          <label for="image">上传图像 (jpg/png/webp)</label>
           <input type="file" id="image" name="image" accept="image/*" />
           <label for="vision-insured" style="margin-top:8px;">是否保价</label>
           <select id="vision-insured" name="vision-insured">
@@ -119,33 +119,33 @@
             <option value="false">否</option>
           </select>
           <div style="margin-top:12px; display:flex; gap:8px;">
-            <button type="submit" id="vision-submit">Analyze & Assess</button>
+            <button type="submit" id="vision-submit">分析与评估</button>
           </div>
         </form>
         <div style="margin-top:12px;">
-          <label>Vision analysis</label>
-          <pre id="vision-analysis">Waiting...</pre>
-          <label>Assessment</label>
-          <pre id="vision-result">Waiting...</pre>
+          <label>图像分析</label>
+          <pre id="vision-analysis">等待中...</pre>
+          <label>评估结果</label>
+          <pre id="vision-result">等待中...</pre>
         </div>
       </div>
 
       <div class="card">
-        <div class="row"><h3>Add document</h3><span class="tag">/docs</span></div>
+        <div class="row"><h3>上传文档</h3><span class="tag">/docs</span></div>
         <form id="doc-form">
-          <label for="doc-id">Document ID</label>
+          <label for="doc-id">文档ID</label>
           <input type="text" id="doc-id" name="doc-id" placeholder="policy-001" />
-          <label for="doc-content" style="margin-top:8px;">Content</label>
+          <label for="doc-content" style="margin-top:8px;">内容</label>
           <textarea id="doc-content" name="doc-content" placeholder="赔付规则或说明文本"></textarea>
-          <label for="doc-meta" style="margin-top:8px;">Metadata (JSON，可选)</label>
+          <label for="doc-meta" style="margin-top:8px;">元数据 (JSON，可选)</label>
           <textarea id="doc-meta" name="doc-meta" placeholder='{"source":"manual"}'></textarea>
           <div style="margin-top:12px; display:flex; gap:8px;">
-            <button type="submit" id="doc-submit">Add / Update</button>
+            <button type="submit" id="doc-submit">添加 / 更新</button>
           </div>
         </form>
         <div style="margin-top:12px;">
-          <label>Result</label>
-          <pre id="doc-result">Waiting...</pre>
+          <label>结果</label>
+          <pre id="doc-result">等待中...</pre>
         </div>
       </div>
     </div>
@@ -174,14 +174,14 @@
       const fileInput = document.getElementById("image");
       const file = fileInput.files[0];
       if (!file) {
-        visionAnalysis.textContent = "Please choose an image.";
+        visionAnalysis.textContent = "请选择一张图像。";
         return;
       }
       const insured = parseOptionalBool(visionInsuredSelect.value);
       const fullInsured = parseOptionalBool(visionFullInsuredSelect.value);
       visionSubmit.disabled = true;
-      visionAnalysis.textContent = "Analyzing image...";
-      visionResult.textContent = "Assessing...";
+      visionAnalysis.textContent = "正在分析图像...";
+      visionResult.textContent = "正在评估...";
       const formData = new FormData();
       formData.append("file", file);
       if (insured !== null) formData.append("insured", insured);
@@ -214,16 +214,16 @@
       const content = document.getElementById("doc-content").value.trim();
       const metaRaw = document.getElementById("doc-meta").value.trim();
       if (!id || !content) {
-        docResult.textContent = "Please provide id and content.";
+        docResult.textContent = "请提供文档ID和内容。";
         return;
       }
       let metadata = undefined;
       if (metaRaw) {
         try { metadata = JSON.parse(metaRaw); }
-        catch (err) { docResult.textContent = "Metadata JSON invalid"; return; }
+        catch (err) { docResult.textContent = "元数据JSON无效"; return; }
       }
       docSubmit.disabled = true;
-      docResult.textContent = "Submitting...";
+      docResult.textContent = "正在提交...";
       try {
         const res = await fetch("/docs", {
           method: "POST",
@@ -231,7 +231,7 @@
           body: JSON.stringify({ id, content, metadata }),
         });
         const data = await res.json();
-        docResult.textContent = res.ok ? JSON.stringify(data, null, 2) : data.detail || "Error";
+        docResult.textContent = res.ok ? JSON.stringify(data, null, 2) : data.detail || "错误";
       } catch (err) {
         docResult.textContent = err.message || String(err);
       } finally {
