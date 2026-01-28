@@ -1,0 +1,52 @@
+{
+  "WB1001": {
+    "company": "SF Express",
+    "insured": true,
+    "full_insured": false,
+    "weight": 2.3,
+    "signed": true,
+    "signed_at": "2025-12-20",
+    "route": ["SZ", "GZ", "SH"],
+    "status": "delivered",
+    "cost":30,
+    "price": 100.0
+  },
+  "WB1002": {
+    "company": "Yunda",
+    "insured": false,
+    "full_insured": false,
+    "signed": false,
+    "status": "in_transit",
+    "cost":19,
+    "price":120
+  },
+  "WB1003": {
+    "company": "SPX",
+    "insured": true,
+    "full_insured": true,
+    "signed": true,
+    "signed_at": "2026-01-10",
+    "status": "delivered",
+    "cost":50,
+    "price":200
+  },
+  "WB1004": {
+    "company": "ZTO",
+    "insured": true,
+    "full_insured": false,
+    "signed": false,
+    "status": "in_transit",
+    "cost":25,
+    "price":80
+  },
+  "WB1005": {
+    "company": "YTO",
+    "insured": false,
+    "full_insured": false,
+    "signed": true,
+    "signed_at": "2025-12-22",
+    "status": "delivered",
+    "cost":15,
+    "price":60
+  }
+}

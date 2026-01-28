@@ -171,6 +171,7 @@ class AgentContext:
     insured: bool | None = None
     full_insured: bool | None = None
     waybill_no: str | None = None
+    company: str | None = None
     image_path: str | None = None
     image_bytes: bytes | None = None
     damage_result: dict | None = None
@@ -184,6 +185,8 @@ class AgentContext:
 def _maybe_fill_insurance_from_waybill(ctx: AgentContext) -> None:
     if not ctx.waybill_result or "error" in ctx.waybill_result:
         return
+    if ctx.company is None:
+        ctx.company = ctx.waybill_result.get("company")
     if ctx.insured is None:
         ctx.insured = ctx.waybill_result.get("insured")
     if ctx.full_insured is None:
@@ -205,12 +208,24 @@ def _build_rag_query(ctx: AgentContext) -> str:
             f"位置={parsed.get('damage_location')}，"
             f"程度={parsed.get('damage_severity')}。"
         )
+    waybill_hint = ""
+    if ctx.waybill_result and "error" not in ctx.waybill_result:
+        cost = ctx.waybill_result.get("cost")
+        price = ctx.waybill_result.get("price")
+        company = ctx.waybill_result.get("company") or ctx.company
+        if cost is not None or price is not None:
+            waybill_hint = f"运费={cost}，货值={price}。"
+        if company:
+            waybill_hint += f"快递公司={company}。"
     return (
-        "请检索与赔付规则相关的内容，重点关注是否破损、保价与足额保价、签收状态等因素。"
+        "请检索与赔付规则相关的内容，优先匹配对应快递公司的条款；"
+        "如果无匹配公司条款，请使用邮政法或通用规则。"
+        "重点关注是否破损、保价与足额保价、签收状态等因素。"
         f"保价情况：{insurance_status}。"
         f"足额保价情况：{full_insurance_status}。"
         f"包裹描述：{ctx.description}。"
         f"{damage_hint}"
+        f"{waybill_hint}"
     )
 
 
@@ -224,9 +239,13 @@ def _llm_decide(ctx: AgentContext) -> str:
     )
     damage_payload = ctx.damage_result or {}
     waybill_payload = ctx.waybill_result or {}
+    cost = waybill_payload.get("cost")
+    price = waybill_payload.get("price")
+    company = waybill_payload.get("company") or ctx.company
     prompt = (
         "你是一个物流赔付智能助手。"
         "请根据提供的规则内容与结构化信息给出赔付结论。"
+        "若存在对应快递公司的条款，则以公司条款为准；否则使用邮政法作为规则。"
         "要求：只输出“结论 + 依据”，不要提问，不要虚构。"
         "结构化信息如下：\n"
         f"保价情况：{insurance_status}\n"
@@ -234,6 +253,9 @@ def _llm_decide(ctx: AgentContext) -> str:
         f"包裹描述：{ctx.description}\n"
         f"图像检测结果：{json.dumps(damage_payload, ensure_ascii=False)}\n"
         f"运单信息：{json.dumps(waybill_payload, ensure_ascii=False)}\n"
+        f"快递公司：{company}\n"
+        f"运费(cost)：{cost}\n"
+        f"货值(price)：{price}\n"
         f"规则内容：\n{ctx.rag_text or ''}\n"
     )
     result = llm.invoke([HumanMessage(content=prompt)])
@@ -363,14 +385,13 @@ def assess_package_stateful(
             continue
 
         if state == AgentState.DECIDE:
-            rule_result = _rule_engine_decide(ctx)
-            ctx.decision = rule_result["decision"]
+            ctx.decision = _llm_decide(ctx)
             state = AgentState.DONE
             continue
 
     return {
         "decision": ctx.decision,
-        "reasons": _rule_engine_decide(ctx).get("reasons"),
+        "reasons": None,
         "damage_result": ctx.damage_result,
         "waybill_result": ctx.waybill_result,
         "rag_text": ctx.rag_text,
