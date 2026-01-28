@@ -241,6 +241,71 @@ def _llm_decide(ctx: AgentContext) -> str:
     return _extract_text(content)
 
 
+def _normalize_damage(ctx: AgentContext) -> dict:
+    parsed = {}
+    if ctx.damage_result and isinstance(ctx.damage_result.get("parsed"), dict):
+        parsed = ctx.damage_result["parsed"]
+    return {
+        "is_damaged": parsed.get("is_damaged"),
+        "damage_severity": parsed.get("damage_severity"),
+        "damage_location": parsed.get("damage_location"),
+    }
+
+
+def _rule_engine_decide(ctx: AgentContext) -> dict:
+    damage = _normalize_damage(ctx)
+    is_damaged = damage.get("is_damaged")
+    insured = ctx.insured
+    full_insured = ctx.full_insured
+    waybill = ctx.waybill_result or {}
+    signed = waybill.get("signed")
+
+    reasons: list[str] = []
+    if is_damaged is False:
+        reasons.append("图像识别结果显示未破损")
+    elif is_damaged is True:
+        reasons.append("图像识别结果显示存在破损")
+    else:
+        reasons.append("缺少明确的破损识别结果")
+
+    if insured is True:
+        reasons.append("运单显示已保价")
+    elif insured is False:
+        reasons.append("运单显示未保价")
+    else:
+        reasons.append("保价信息缺失")
+
+    if full_insured is True:
+        reasons.append("运单显示足额保价")
+    elif full_insured is False:
+        reasons.append("运单显示未足额保价")
+    else:
+        reasons.append("足额保价信息缺失")
+
+    if signed is True:
+        reasons.append("运单显示已签收")
+    elif signed is False:
+        reasons.append("运单显示未签收")
+    else:
+        reasons.append("签收信息缺失")
+
+    decision = "待补充信息"
+    if is_damaged is False:
+        decision = "不予赔付"
+    elif is_damaged is True:
+        if insured is True:
+            decision = "可赔付"
+        elif insured is False:
+            decision = "不予赔付"
+        else:
+            decision = "待补充信息"
+    return {
+        "decision": decision,
+        "reasons": reasons,
+        "damage": damage,
+    }
+
+
 def assess_package_stateful(
     description: str,
     insured: bool | None = None,
@@ -298,12 +363,14 @@ def assess_package_stateful(
             continue
 
         if state == AgentState.DECIDE:
-            ctx.decision = _llm_decide(ctx)
+            rule_result = _rule_engine_decide(ctx)
+            ctx.decision = rule_result["decision"]
             state = AgentState.DONE
             continue
 
     return {
         "decision": ctx.decision,
+        "reasons": _rule_engine_decide(ctx).get("reasons"),
         "damage_result": ctx.damage_result,
         "waybill_result": ctx.waybill_result,
         "rag_text": ctx.rag_text,

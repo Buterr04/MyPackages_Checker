@@ -106,6 +106,8 @@
         <form id="vision-form">
           <label for="image">上传图像 (jpg/png/webp)</label>
           <input type="file" id="image" name="image" accept="image/*" />
+          <label for="vision-waybill" style="margin-top:8px;">运单号（可选）</label>
+          <input type="text" id="vision-waybill" name="vision-waybill" placeholder="例如：WB1001" />
           <label for="vision-insured" style="margin-top:8px;">是否保价</label>
           <select id="vision-insured" name="vision-insured">
             <option value="">未提供</option>
@@ -127,6 +129,8 @@
           <pre id="vision-analysis">等待中...</pre>
           <label>评估结果</label>
           <pre id="vision-result">等待中...</pre>
+          <label>赔付依据</label>
+          <pre id="vision-reasons">等待中...</pre>
         </div>
       </div>
 
@@ -155,9 +159,11 @@
     const visionForm = document.getElementById("vision-form");
     const visionAnalysis = document.getElementById("vision-analysis");
     const visionResult = document.getElementById("vision-result");
+    const visionReasons = document.getElementById("vision-reasons");
     const visionSubmit = document.getElementById("vision-submit");
     const visionInsuredSelect = document.getElementById("vision-insured");
     const visionFullInsuredSelect = document.getElementById("vision-full-insured");
+    const visionWaybillInput = document.getElementById("vision-waybill");
 
     const docForm = document.getElementById("doc-form");
     const docSubmit = document.getElementById("doc-submit");
@@ -179,13 +185,16 @@
       }
       const insured = parseOptionalBool(visionInsuredSelect.value);
       const fullInsured = parseOptionalBool(visionFullInsuredSelect.value);
+      const waybillNo = visionWaybillInput.value.trim();
       visionSubmit.disabled = true;
       visionAnalysis.textContent = "正在分析图像...";
       visionResult.textContent = "正在评估...";
+      visionReasons.textContent = "正在生成依据...";
       const formData = new FormData();
       formData.append("file", file);
       if (insured !== null) formData.append("insured", insured);
       if (fullInsured !== null) formData.append("full_insured", fullInsured);
+      if (waybillNo) formData.append("waybill_no", waybillNo);
       try {
         const res = await fetch("/vision-assess", { method: "POST", body: formData });
         const data = await res.json();
@@ -194,13 +203,22 @@
           const raw = analysis.raw ?? analysis;
           visionAnalysis.textContent = raw ? JSON.stringify(raw, null, 2) : JSON.stringify(analysis, null, 2);
           visionResult.textContent = data.result || JSON.stringify(data, null, 2);
+          if (Array.isArray(data.reasons) && data.reasons.length) {
+            visionReasons.textContent = data.reasons.join("; ");
+          } else if (data.rag) {
+            visionReasons.textContent = data.rag;
+          } else {
+            visionReasons.textContent = "未提供依据";
+          }
         } else {
           visionAnalysis.textContent = data.detail || "Error";
           visionResult.textContent = data.detail || "Error";
+          visionReasons.textContent = data.detail || "Error";
         }
       } catch (err) {
         visionAnalysis.textContent = err.message || String(err);
         visionResult.textContent = err.message || String(err);
+        visionReasons.textContent = err.message || String(err);
       } finally {
         visionSubmit.disabled = false;
       }
