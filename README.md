@@ -7,15 +7,41 @@
     - `database.py`：向量数据库操作
     - `main.py`：核心逻辑与评估函数
     - `search.py`：向量检索相关功能
+    - `waybill.py`：快递单号匹配功能
 - `front_end/`：前端单页文件
+- `data/`：数据文件夹
+    - `waybill_mock.json`：模拟快递单数据
+- `docs/`：赔付文档目录
 - `requirements.txt`：依赖列表
+- `.env`：环境变量配置文件
 
+### 快递单数据格式
+```json
+{
+  "WB1001": {  //快递单号
+    "company": "SF Express",  //快递公司名称
+    "insured": true,  //是否保价
+    "full_insured": false,  //是否全额保价
+    "weight": 2.3,  //快递重量（可选）
+    "signed": true,  //是否签收(可选)
+    "signed_at": "2025-12-20",  //签收日期(可选)
+    "route": ["SZ", "GZ", "SH"],  //运输路线（可选）
+    "status": "delivered",  //快递状态(可选)
+    "cost":30,  //快递费用
+    "price": 100.0  //快递价格
+  },
+  {
+    ...
+  }
+}
+```
+实际上重要的数据为`company`,`insured`,`full_insured`,`cost`,`price`字段，其他字段可根据需要自行添加，无强制要求。
 
 ## 运行 FastAPI 服务
 1) 准备环境：`pip install -r requirements.txt`
 3) 启动服务：`uvicorn src.FastApi:app --reload`
 	- 如果你有自己的密钥，运行前设置：`export GOOGLE_API_KEY=your_key`
-    - 也可以建立 `.env` 文件，内容为 `GOOGLE_API_KEY=your_key`
+    - 建议建立 `.env` 文件，内容为 `GOOGLE_API_KEY=your_key`
 	- 未设置时会使用内置的密钥，默认此密钥无效，需要使用你自己的。
 
 ### API
@@ -29,7 +55,7 @@
 可以采用caddy进行服务器端部署，供外网直接访问连接
 
 1) 将全部代码克隆到本地 `git clone`
-2) 配置API_KEY文件`.env`
+2) 配置API_KEY文件`.env`（建议）
 4) 安装caddy，建议v2以上版本，根据caddy官方教程手动下载并安装
 5) 编写默认位于`/etc/caddy/`下的`CaddyFile`
 

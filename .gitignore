@@ -32,5 +32,5 @@ htmlcov/
 .env
 
 # Datasets and database
-/data
+damaged-and-intact-packages/
 /chroma_store
