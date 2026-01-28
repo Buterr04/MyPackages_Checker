@@ -3,6 +3,8 @@
 import base64
 import json
 import os
+from dataclasses import dataclass, field
+from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -14,6 +16,8 @@ from langchain.tools import tool
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from .database import get_vector_store
+from .gemini_vision import analyze_image_bytes, analyze_image_path
+from .waybill import query_waybill_data
 
 
 DEFAULT_API_KEY_B64 = "QUl6YVN5QkRITzBnRVg0bk4zSU1lZnFsb1ExVjd2azdVTFZ0YWM4MA=="
@@ -45,8 +49,7 @@ def _extract_text(content: Any) -> str:
     return str(content)
 
 
-@tool(response_format="content_and_artifact")
-def retrieve_context(query: str):
+def retrieve_context_data(query: str):
     """Retrieve information from the vector store to help answer a query."""
     docs = get_vector_store().similarity_search(query, k=3)
     serialized = "\n\n".join(
@@ -54,6 +57,46 @@ def retrieve_context(query: str):
         for doc in docs
     )
     return serialized, docs
+
+
+@tool(response_format="content_and_artifact")
+def retrieve_context(query: str):
+    """Tool wrapper for retrieval."""
+    return retrieve_context_data(query)
+
+
+@tool
+def query_waybill(waybill_no: str) -> dict:
+    """Query a mock waybill data source using a waybill number."""
+    return query_waybill_data(waybill_no)
+
+
+@tool
+def detect_damage_from_path(image_path: str) -> dict:
+    """Analyze an image file path and return structured damage information."""
+    if not image_path:
+        return {"error": "image_path_required"}
+    try:
+        return analyze_image_path(image_path)
+    except FileNotFoundError:
+        return {"error": "image_not_found"}
+    except Exception as exc:  # pragma: no cover - defensive for runtime errors
+        return {"error": f"vision_failed: {exc}"}
+
+
+@tool
+def detect_damage_from_base64(image_base64: str) -> dict:
+    """Analyze base64 image content and return structured damage information."""
+    if not image_base64:
+        return {"error": "image_base64_required"}
+    try:
+        image_bytes = base64.b64decode(image_base64)
+    except (ValueError, TypeError):
+        return {"error": "invalid_base64"}
+    try:
+        return analyze_image_bytes(image_bytes)
+    except Exception as exc:  # pragma: no cover - defensive for runtime errors
+        return {"error": f"vision_failed: {exc}"}
 
 
 @lru_cache(maxsize=1)
@@ -66,7 +109,7 @@ def get_agent():
     )
     return create_agent(
         model=llm,
-        tools=[retrieve_context],
+        tools=[retrieve_context, query_waybill, detect_damage_from_path, detect_damage_from_base64],
         system_prompt=system_prompt,
     )
 
@@ -111,3 +154,158 @@ def assess_package(
         return json.dumps(result, ensure_ascii=False)
 
     return _extract_text(result)
+
+
+class AgentState(str, Enum):
+    INIT = "init"
+    NEED_DAMAGE_INFO = "need_damage_info"
+    NEED_WAYBILL = "need_waybill"
+    NEED_RULES = "need_rules"
+    DECIDE = "decide"
+    DONE = "done"
+
+
+@dataclass
+class AgentContext:
+    description: str
+    insured: bool | None = None
+    full_insured: bool | None = None
+    waybill_no: str | None = None
+    image_path: str | None = None
+    image_bytes: bytes | None = None
+    damage_result: dict | None = None
+    waybill_result: dict | None = None
+    rag_text: str | None = None
+    rag_docs: list[Any] = field(default_factory=list)
+    decision: str | None = None
+    state_trace: list[str] = field(default_factory=list)
+
+
+def _maybe_fill_insurance_from_waybill(ctx: AgentContext) -> None:
+    if not ctx.waybill_result or "error" in ctx.waybill_result:
+        return
+    if ctx.insured is None:
+        ctx.insured = ctx.waybill_result.get("insured")
+    if ctx.full_insured is None:
+        ctx.full_insured = ctx.waybill_result.get("full_insured")
+
+
+def _build_rag_query(ctx: AgentContext) -> str:
+    insurance_status = (
+        "未提供保价信息" if ctx.insured is None else "已完成保价" if ctx.insured else "未完成保价"
+    )
+    full_insurance_status = (
+        "未提供足额保价信息" if ctx.full_insured is None else "已足额保价" if ctx.full_insured else "未足额保价"
+    )
+    damage_hint = ""
+    if ctx.damage_result and isinstance(ctx.damage_result.get("parsed"), dict):
+        parsed = ctx.damage_result["parsed"]
+        damage_hint = (
+            f"图像检测结果：是否破损={parsed.get('is_damaged')}，"
+            f"位置={parsed.get('damage_location')}，"
+            f"程度={parsed.get('damage_severity')}。"
+        )
+    return (
+        "请检索与赔付规则相关的内容，重点关注是否破损、保价与足额保价、签收状态等因素。"
+        f"保价情况：{insurance_status}。"
+        f"足额保价情况：{full_insurance_status}。"
+        f"包裹描述：{ctx.description}。"
+        f"{damage_hint}"
+    )
+
+
+def _llm_decide(ctx: AgentContext) -> str:
+    llm = get_llm()
+    insurance_status = (
+        "未提供保价信息" if ctx.insured is None else "已完成保价" if ctx.insured else "未完成保价"
+    )
+    full_insurance_status = (
+        "未提供足额保价信息" if ctx.full_insured is None else "已足额保价" if ctx.full_insured else "未足额保价"
+    )
+    damage_payload = ctx.damage_result or {}
+    waybill_payload = ctx.waybill_result or {}
+    prompt = (
+        "你是一个物流赔付智能助手。"
+        "请根据提供的规则内容与结构化信息给出赔付结论。"
+        "要求：只输出“结论 + 依据”，不要提问，不要虚构。"
+        "结构化信息如下：\n"
+        f"保价情况：{insurance_status}\n"
+        f"足额保价情况：{full_insurance_status}\n"
+        f"包裹描述：{ctx.description}\n"
+        f"图像检测结果：{json.dumps(damage_payload, ensure_ascii=False)}\n"
+        f"运单信息：{json.dumps(waybill_payload, ensure_ascii=False)}\n"
+        f"规则内容：\n{ctx.rag_text or ''}\n"
+    )
+    result = llm.invoke([HumanMessage(content=prompt)])
+    content = getattr(result, "content", result)
+    return _extract_text(content)
+
+
+def assess_package_stateful(
+    description: str,
+    insured: bool | None = None,
+    full_insured: bool | None = None,
+    waybill_no: str | None = None,
+    image_path: str | None = None,
+    image_bytes: bytes | None = None,
+) -> dict:
+    if not description:
+        raise ValueError("description is required")
+
+    ctx = AgentContext(
+        description=description,
+        insured=insured,
+        full_insured=full_insured,
+        waybill_no=waybill_no,
+        image_path=image_path,
+        image_bytes=image_bytes,
+    )
+    state = AgentState.INIT
+
+    while state != AgentState.DONE:
+        ctx.state_trace.append(state.value)
+
+        if state == AgentState.INIT:
+            if ctx.image_bytes or ctx.image_path:
+                state = AgentState.NEED_DAMAGE_INFO
+            elif ctx.waybill_no and (ctx.insured is None or ctx.full_insured is None):
+                state = AgentState.NEED_WAYBILL
+            else:
+                state = AgentState.NEED_RULES
+            continue
+
+        if state == AgentState.NEED_DAMAGE_INFO:
+            if ctx.image_bytes:
+                ctx.damage_result = analyze_image_bytes(ctx.image_bytes)
+            elif ctx.image_path:
+                ctx.damage_result = analyze_image_path(ctx.image_path)
+            state = AgentState.NEED_WAYBILL if ctx.waybill_no else AgentState.NEED_RULES
+            continue
+
+        if state == AgentState.NEED_WAYBILL:
+            if ctx.waybill_no:
+                ctx.waybill_result = query_waybill_data(ctx.waybill_no)
+                _maybe_fill_insurance_from_waybill(ctx)
+            state = AgentState.NEED_RULES
+            continue
+
+        if state == AgentState.NEED_RULES:
+            query = _build_rag_query(ctx)
+            rag_text, rag_docs = retrieve_context_data(query)
+            ctx.rag_text = rag_text
+            ctx.rag_docs = rag_docs
+            state = AgentState.DECIDE
+            continue
+
+        if state == AgentState.DECIDE:
+            ctx.decision = _llm_decide(ctx)
+            state = AgentState.DONE
+            continue
+
+    return {
+        "decision": ctx.decision,
+        "damage_result": ctx.damage_result,
+        "waybill_result": ctx.waybill_result,
+        "rag_text": ctx.rag_text,
+        "state_trace": ctx.state_trace,
+    }
