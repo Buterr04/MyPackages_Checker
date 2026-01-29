@@ -9,10 +9,9 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from .database import get_vector_store, upsert_text_doc
+from .database import get_vector_store, ingest_txt_folder, upsert_text_doc
 from .vision_router import analyze_image_bytes_with_provider
 from .main import assess_package_stateful
-from .search import bootstrap_vector_store
 
 app = FastAPI(title="Packages Checker API")
 load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env", override=False)
@@ -36,8 +35,8 @@ class AddDocRequest(BaseModel):
 
 @app.on_event("startup")
 async def _startup():
-    # Load default txt rules into the vector store if missing
-    bootstrap_vector_store()
+    # Startup is kept lightweight; ingestion is manual via endpoint.
+    pass
 
 
 @app.get("/", response_class=FileResponse)
@@ -59,6 +58,15 @@ async def add_doc(payload: AddDocRequest):
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"id": payload.id, "message": "ok"}
+
+
+@app.post("/docs/ingest")
+async def ingest_docs():
+    try:
+        ingest_txt_folder("docs")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"message": "ingest_started"}
 
 
 @app.get("/docs/list")

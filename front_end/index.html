@@ -152,6 +152,7 @@
           <textarea id="doc-meta" name="doc-meta" placeholder='{"source":"manual"}'></textarea>
           <div style="margin-top:12px; display:flex; gap:8px;">
             <button type="submit" id="doc-submit">添加 / 更新</button>
+            <button type="button" id="doc-ingest">刷新向量库</button>
           </div>
         </form>
         <div style="margin-top:12px;">
@@ -176,6 +177,7 @@
     const docForm = document.getElementById("doc-form");
     const docSubmit = document.getElementById("doc-submit");
     const docResult = document.getElementById("doc-result");
+    const docIngest = document.getElementById("doc-ingest");
 
     function parseOptionalBool(value) {
       if (value === "true") return true;
@@ -268,6 +270,22 @@
     }
 
     docForm.addEventListener("submit", handleDocSubmit);
+
+    async function handleDocIngest() {
+      docIngest.disabled = true;
+      docResult.textContent = "正在刷新向量库...";
+      try {
+        const res = await fetch("/docs/ingest", { method: "POST" });
+        const data = await res.json();
+        docResult.textContent = res.ok ? JSON.stringify(data, null, 2) : data.detail || "错误";
+      } catch (err) {
+        docResult.textContent = err.message || String(err);
+      } finally {
+        docIngest.disabled = false;
+      }
+    }
+
+    docIngest.addEventListener("click", handleDocIngest);
   </script>
 </body>
 </html>
