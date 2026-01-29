@@ -9,7 +9,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from .database import upsert_text_doc
+from .database import get_vector_store, upsert_text_doc
 from .gemini_vision import analyze_image_bytes
 from .main import assess_package_stateful
 from .search import bootstrap_vector_store
@@ -59,6 +59,16 @@ async def add_doc(payload: AddDocRequest):
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"id": payload.id, "message": "ok"}
+
+
+@app.get("/docs/list")
+async def list_docs():
+    try:
+        store = get_vector_store()
+        payload = store.get(include=["metadatas"])
+        return {"ids": payload.get("ids", []), "metadatas": payload.get("metadatas", [])}
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.post("/vision")

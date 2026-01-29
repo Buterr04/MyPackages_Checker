@@ -47,6 +47,8 @@
 ### API
 - `GET /health`：健康检查
  - `GET /`：前端单页（图片评估与规则文档维护）
+- `GET /docs`：FastAPI 自动生成的交互式 API 文档
+- `GET /docs/list`：列出已存储的文档列表
 - `POST /vision`：上传图片文件，返回图像分析 JSON
 - `POST /vision-assess`：上传图片，先分析再输出赔付判定
 - `POST /docs`：请求体 `{ "id": "doc-id", "content": "文本内容", "metadata": {..可选..} }`，写入/更新到向量库并持久化
