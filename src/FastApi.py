@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from .database import get_vector_store, upsert_text_doc
-from .gemini_vision import analyze_image_bytes
+from .vision_router import analyze_image_bytes_with_provider
 from .main import assess_package_stateful
 from .search import bootstrap_vector_store
 
@@ -72,13 +72,16 @@ async def list_docs():
 
 
 @app.post("/vision")
-async def vision(file: UploadFile = File(...)):
+async def vision(
+    file: UploadFile = File(...),
+    provider: str | None = Form(default=None),
+):
     if file.content_type not in {"image/jpeg", "image/png", "image/webp", "image/jpg"}:
         raise HTTPException(status_code=400, detail="Unsupported image type")
 
     image_bytes = await file.read()
     try:
-        analysis = analyze_image_bytes(image_bytes)
+        analysis = analyze_image_bytes_with_provider(image_bytes, provider)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -91,13 +94,14 @@ async def vision_assess(
     insured: bool | None = Form(default=None),
     full_insured: bool | None = Form(default=None),
     waybill_no: str | None = Form(default=None),
+    provider: str | None = Form(default=None),
 ):
     if file.content_type not in {"image/jpeg", "image/png", "image/webp", "image/jpg"}:
         raise HTTPException(status_code=400, detail="Unsupported image type")
 
     image_bytes = await file.read()
     try:
-        analysis = analyze_image_bytes(image_bytes)
+        analysis = analyze_image_bytes_with_provider(image_bytes, provider)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -109,6 +113,8 @@ async def vision_assess(
             insured=insured,
             full_insured=full_insured,
             waybill_no=waybill_no,
+            llm_provider=provider,
+            vision_provider=provider,
             image_bytes=image_bytes,
         )
     except Exception as exc:

@@ -13,10 +13,9 @@ from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.messages import HumanMessage
 from langchain.tools import tool
-from langchain_google_genai import ChatGoogleGenerativeAI
-
 from .database import get_vector_store
-from .gemini_vision import analyze_image_bytes, analyze_image_path
+from .providers import get_chat_llm
+from .vision_router import analyze_image_bytes_with_provider, analyze_image_path_with_provider
 from .waybill import query_waybill_data
 
 
@@ -32,11 +31,10 @@ def _get_api_key() -> str:
     return base64.b64decode(DEFAULT_API_KEY_B64).decode("utf-8")
 
 
-@lru_cache(maxsize=1)
-def get_llm():
+@lru_cache(maxsize=4)
+def get_llm(provider: str | None = None):
     os.environ.setdefault("GOOGLE_API_KEY", _get_api_key())
-    model = os.getenv("GEMINI_CHAT_MODEL", "gemini-2.5-flash")
-    return ChatGoogleGenerativeAI(model=model)
+    return get_chat_llm(provider)
 
 
 def _extract_text(content: Any) -> str:
@@ -72,12 +70,12 @@ def query_waybill(waybill_no: str) -> dict:
 
 
 @tool
-def detect_damage_from_path(image_path: str) -> dict:
+def detect_damage_from_path(image_path: str, provider: str | None = None) -> dict:
     """Analyze an image file path and return structured damage information."""
     if not image_path:
         return {"error": "image_path_required"}
     try:
-        return analyze_image_path(image_path)
+        return analyze_image_path_with_provider(image_path, provider)
     except FileNotFoundError:
         return {"error": "image_not_found"}
     except Exception as exc:  # pragma: no cover - defensive for runtime errors
@@ -85,7 +83,7 @@ def detect_damage_from_path(image_path: str) -> dict:
 
 
 @tool
-def detect_damage_from_base64(image_base64: str) -> dict:
+def detect_damage_from_base64(image_base64: str, provider: str | None = None) -> dict:
     """Analyze base64 image content and return structured damage information."""
     if not image_base64:
         return {"error": "image_base64_required"}
@@ -94,7 +92,7 @@ def detect_damage_from_base64(image_base64: str) -> dict:
     except (ValueError, TypeError):
         return {"error": "invalid_base64"}
     try:
-        return analyze_image_bytes(image_bytes)
+        return analyze_image_bytes_with_provider(image_bytes, provider)
     except Exception as exc:  # pragma: no cover - defensive for runtime errors
         return {"error": f"vision_failed: {exc}"}
 
@@ -172,6 +170,8 @@ class AgentContext:
     full_insured: bool | None = None
     waybill_no: str | None = None
     company: str | None = None
+    llm_provider: str | None = None
+    vision_provider: str | None = None
     image_path: str | None = None
     image_bytes: bytes | None = None
     damage_result: dict | None = None
@@ -230,7 +230,7 @@ def _build_rag_query(ctx: AgentContext) -> str:
 
 
 def _llm_decide(ctx: AgentContext) -> str:
-    llm = get_llm()
+    llm = get_llm(ctx.llm_provider)
     insurance_status = (
         "未提供保价信息" if ctx.insured is None else "已完成保价" if ctx.insured else "未完成保价"
     )
@@ -335,6 +335,8 @@ def assess_package_stateful(
     waybill_no: str | None = None,
     image_path: str | None = None,
     image_bytes: bytes | None = None,
+    llm_provider: str | None = None,
+    vision_provider: str | None = None,
 ) -> dict:
     if not description:
         raise ValueError("description is required")
@@ -346,6 +348,8 @@ def assess_package_stateful(
         waybill_no=waybill_no,
         image_path=image_path,
         image_bytes=image_bytes,
+        llm_provider=llm_provider,
+        vision_provider=vision_provider,
     )
     state = AgentState.INIT
 
@@ -363,9 +367,13 @@ def assess_package_stateful(
 
         if state == AgentState.NEED_DAMAGE_INFO:
             if ctx.image_bytes:
-                ctx.damage_result = analyze_image_bytes(ctx.image_bytes)
+                ctx.damage_result = analyze_image_bytes_with_provider(
+                    ctx.image_bytes, ctx.vision_provider
+                )
             elif ctx.image_path:
-                ctx.damage_result = analyze_image_path(ctx.image_path)
+                ctx.damage_result = analyze_image_path_with_provider(
+                    ctx.image_path, ctx.vision_provider
+                )
             state = AgentState.NEED_WAYBILL if ctx.waybill_no else AgentState.NEED_RULES
             continue
 

@@ -1,13 +1,30 @@
 # MyPackages_Checker
 
+本项目为北京邮电大学毕业设计项目
+
+题目：基于大模型 Agent 的物流包裹破损智能识别与赔付决策系统
+
+## 项目简介
+本项目旨在开发一个基于大语言模型（LLM）和视觉模型的智能系统，用于识别物流包裹的破损情况并做出相应的赔付决策。系统通过分析用户上传的包裹图片，结合快递单信息和赔付规则，自动判断是否应进行赔付以及赔付金额，并给出详细赔付报告
+
+## 功能特点
+- **图像分析**：利用多模态大模型对包裹图片进行破损识别
+- **快递单信息集成**：结合用户提供的快递单信息，获取决策依据
+- **规则驱动的赔付决策**：根据预设的赔付规则进行RAG增强检索，自动计算赔付金额进行理赔
+- **多模型支持**：支持 Google Gemini 模型和 OpenAI 兼容模型
+- **易于扩展**：模块化设计，便于后续功能扩展和模型替换
+
 ## 项目结构
 - `src/`：源代码目录
     - `FastApi.py`：FastAPI 应用主文件
     - `gemini_vision.py`：调用 Gemini Vision API 的封装
+    - `openai_vision.py`：调用 OpenAI 兼容视觉模型 API 的封装
+    -`providers.py`：LLM 和视觉模型提供者选择封装
+    -`vision_router.py`：视觉模型相关 FastAPI 路由
     - `database.py`：向量数据库操作
     - `main.py`：核心逻辑与评估函数
     - `search.py`：向量检索相关功能
-    - `waybill.py`：快递单号匹配功能
+    - `waybill.py`：快递单检索功能
 - `front_end/`：前端单页文件
 - `data/`：数据文件夹
     - `waybill_mock.json`：模拟快递单数据
@@ -44,20 +61,31 @@
     - 建议建立 `.env` 文件，内容为 `GOOGLE_API_KEY=your_key`
 	- 未设置时会使用内置的密钥，默认此密钥无效，需要使用你自己的。
 
-### API
+### 环境变量API
+程序提供Google Gemini和OpenAI兼容模型的API调用支持，可以使用Gemini以及众多兼容OpenAI的LLM，建议在`.env`文件中配置以下变量：
+- `GOOGLE_API_KEY`：Google Gemini API 密钥
+- `OPENAI_API_KEY`：OpenAI 兼容模型 API 密钥
+- `OPENAI_BASE_URL`：OpenAI 兼容模型 API 基础 URL
+- `OPENAI_MODEL`：OpenAI 兼容模型名称
+- `OPENAI_VISION_MODEL`：OpenAI 兼容视觉模型名称（可选）
+
+
+### Fast API
 - `GET /health`：健康检查
- - `GET /`：前端单页（图片评估与规则文档维护）
+ - `GET /`：前端单页（图片评估~~与规则文档维护~~）
 - `GET /docs`：FastAPI 自动生成的交互式 API 文档
 - `GET /docs/list`：列出已存储的文档列表
 - `POST /vision`：上传图片文件，返回图像分析 JSON
 - `POST /vision-assess`：上传图片，先分析再输出赔付判定
-- `POST /docs`：请求体 `{ "id": "doc-id", "content": "文本内容", "metadata": {..可选..} }`，写入/更新到向量库并持久化
+- ~~`POST /docs`：请求体 `{ "id": "doc-id", "content": "文本内容", "metadata": {..可选..} }`，写入/更新到向量库并持久化~~（废弃）
+
+已实现自动嵌入新增文本，增加文本功能废弃
 
 ## 服务端部署
 可以采用caddy进行服务器端部署，供外网直接访问连接
 
 1) 将全部代码克隆到本地 `git clone`
-2) 配置API_KEY文件`.env`（建议）
+2) 配置环境变量文件`.env`（建议）
 4) 安装caddy，建议v2以上版本，根据caddy官方教程手动下载并安装
 5) 编写默认位于`/etc/caddy/`下的`CaddyFile`
 
@@ -81,7 +109,7 @@ www.example.com, YOUR_IP {
 
 3) 启动或者重新启动caddy服务，参考caddy官方教程
 4) 运行FastAPI应用程序
-6) 你现在应该可以看到FastAPI给出的相应，此时通过你的域名或服务器IP即可访问此应用程序
-7) 建议正式运行前进行向量数据库部署，即转换txt到chroma中
+6) 你现在应该可以看到FastAPI给出的相应，此时通过你的域名或服务器IP即可访问此应用程序前端
+7) ~~建议正式运行前进行向量数据库部署，即转换txt到chroma中~~ （已实现运行时嵌入，无需预先部署）
 
 Made with ❤️ by Buterr
