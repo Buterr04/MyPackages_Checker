@@ -18,7 +18,9 @@ def get_openai_vision_llm():
     model = os.getenv("OPENAI_VISION_MODEL", os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
     base_url = os.getenv("OPENAI_BASE_URL")
     api_key = os.getenv("OPENAI_API_KEY")
-    return ChatOpenAI(model=model, base_url=base_url, api_key=api_key)
+    force_json = os.getenv("OPENAI_FORCE_JSON", "true").strip().lower() in {"1", "true", "yes", "on"}
+    model_kwargs = {"response_format": {"type": "json_object"}} if force_json else None
+    return ChatOpenAI(model=model, base_url=base_url, api_key=api_key, model_kwargs=model_kwargs)
 
 
 def _build_prompt(image_base64: str) -> HumanMessage:
@@ -32,9 +34,10 @@ def _build_prompt(image_base64: str) -> HumanMessage:
                     "'top left corner', or 'inside the box', etc. "
                     "Combine the damaged areas with the whole package, "
                     "give me the percentages. "
-                    "Return ONLY a JSON object with no markdown. "
+                    "Return ONLY a JSON object with no markdown or backslash. "
                     "JSON format: {\"is_damaged\": true/false, "
-                    "\"damage_location\": \"damaged_percentage\", "
+                    "\"damage_location\","
+                    "\"damaged_percentage\", "
                     "\"damage_severity\": \"low/medium/high\"}"
                 ),
             },
@@ -54,13 +57,17 @@ def analyze_image_bytes(image_bytes: bytes) -> Dict[str, Any]:
     raw_content = getattr(result, "content", result)
 
     parsed = None
-    if isinstance(raw_content, str):
+    if isinstance(raw_content, dict):
+        parsed = raw_content
+    elif isinstance(raw_content, str):
         try:
             parsed = json.loads(raw_content)
         except json.JSONDecodeError:
             parsed = None
 
-    return {"raw": raw_content, "parsed": parsed}
+    if parsed is not None:
+        return {"raw": parsed, "parsed": parsed}
+    return {"raw": raw_content, "parsed": None}
 
 
 def analyze_image_path(path: str) -> Dict[str, Any]:

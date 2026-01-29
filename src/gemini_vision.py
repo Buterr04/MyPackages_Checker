@@ -39,8 +39,11 @@ def _build_prompt(image_base64: str) -> HumanMessage:
                     "If it is damaged, tell me where is the damage,for example: 'top left corner', or 'inside the box', etc. "
                     "Combine the damaged areas with the whole package,"
                     "give me the percentages."
-                    "Return ONLY a JSON object with no markdown."
-                    "JSON format: {\"is_damaged\": true/false, \"damage_location\": \"damaged_percentage\", \"damage_severity\": \"low/medium/high\"}"
+                    "Return ONLY a JSON object with no markdown or backslash. "
+                    "JSON format: {\"is_damaged\": true/false,"
+                    "\"damage_location\","
+                    "\"damaged_percentage\","
+                    "\"damage_severity\": \"low/medium/high\"}"
                 ),
             },
             {"type": "image_url", "image_url": f"data:image/jpeg;base64,{image_base64}"},
@@ -59,13 +62,17 @@ def analyze_image_bytes(image_bytes: bytes) -> Dict[str, Any]:
     raw_content = getattr(result, "content", result)
 
     parsed = None
-    if isinstance(raw_content, str):
+    if isinstance(raw_content, dict):
+        parsed = raw_content
+    elif isinstance(raw_content, str):
         try:
             parsed = json.loads(raw_content)
         except json.JSONDecodeError:
             parsed = None
 
-    return {"raw": raw_content, "parsed": parsed}
+    if parsed is not None:
+        return {"raw": parsed, "parsed": parsed}
+    return {"raw": raw_content, "parsed": None}
 
 
 def analyze_image_path(path: str) -> Dict[str, Any]:
