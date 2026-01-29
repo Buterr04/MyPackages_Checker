@@ -14,6 +14,13 @@
 - **多模型支持**：支持 Google Gemini 模型和 OpenAI 兼容模型
 - **易于扩展**：模块化设计，便于后续功能扩展和模型替换
 
+## 技术栈
+- **Agent 框架**：LangChain
+- **后端**：FastAPI
+- **大语言模型**：Google Gemini, OpenAI，OpenAI兼容模型
+- **向量数据库**：Chroma
+- **前端**：单页HTML
+
 ## 项目结构
 - `src/`：源代码目录
     - `FastApi.py`：FastAPI 应用主文件
