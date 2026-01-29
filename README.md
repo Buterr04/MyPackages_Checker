@@ -26,8 +26,8 @@
     - `FastApi.py`：FastAPI 应用主文件
     - `gemini_vision.py`：调用 Gemini Vision API 的封装
     - `openai_vision.py`：调用 OpenAI 兼容视觉模型 API 的封装
-    -`providers.py`：LLM 和视觉模型提供者选择封装
-    -`vision_router.py`：视觉模型相关 FastAPI 路由
+    - `providers.py`：LLM 和视觉模型提供者选择封装
+    - `vision_router.py`：视觉模型相关 FastAPI 路由
     - `database.py`：向量数据库操作
     - `main.py`：核心逻辑与评估函数
     - `search.py`：向量检索相关功能
