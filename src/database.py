@@ -60,7 +60,7 @@ def upsert_text_doc(doc_id: str, content: str, metadata: Optional[Dict] = None, 
     doc = Document(page_content=content, metadata=metadata)
     store.add_documents(documents=[doc], ids=[doc_id])
     if persist_after:
-        store.persist()
+        _persist_store(store)
 
 
 def read_docs(query: str, k: int = 2):
@@ -81,7 +81,7 @@ def delete_doc(doc_id: str):
 
 def persist():
     store = get_vector_store()
-    store.persist()
+    _persist_store(store)
 
 
 def is_empty() -> bool:
@@ -97,4 +97,13 @@ def ingest_txt_folder(folder_path: str):
     if not folder.exists():
         return
     for file_path in folder.glob("*.txt"):
-        add_txt_file(str(file_path))
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        upsert_text_doc(str(file_path), content, metadata={"source": str(file_path)}, persist_after=False)
+    _persist_store(get_vector_store())
+
+
+def _persist_store(store: Chroma):
+    """Persist if the current Chroma backend supports it."""
+    if hasattr(store, "persist"):
+        store.persist()
