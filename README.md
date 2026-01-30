@@ -10,34 +10,35 @@
 ## 功能特点
 - **图像分析**：利用多模态大模型对包裹图片进行破损识别
 - **快递单信息集成**：结合用户提供的快递单信息，获取决策依据
-- **规则驱动的赔付决策**：根据预设的赔付规则进行RAG增强检索，自动计算赔付金额进行理赔
+- **规则驱动的赔付决策**：利用RAG增强检索获取赔付规则，自动计算赔付金额进行理赔
 - **多模型支持**：支持 Google Gemini 模型和 OpenAI 兼容模型
-- **易于扩展**：模块化设计，便于后续功能扩展和模型替换
 
 ## 技术栈
 - **Agent 框架**：LangChain
 - **后端**：FastAPI
 - **大语言模型**：Google Gemini, OpenAI，OpenAI兼容模型
 - **向量数据库**：Chroma
-- **前端**：单页HTML
+- **前端**：Vite + React
+- **动效库**：[ReactBits](https://reactbits.dev)
 
 ## 项目结构
 - `src/`：源代码目录
     - `FastApi.py`：FastAPI 应用主文件
     - `gemini_vision.py`：调用 Gemini Vision API 的封装
     - `openai_vision.py`：调用 OpenAI 兼容视觉模型 API 的封装
-    - `providers.py`：LLM 和视觉模型提供者选择封装
+    - `providers.py`：LLM 模型提供者选择封装
     - `vision_router.py`：视觉模型相关 FastAPI 路由
     - `database.py`：向量数据库操作
     - `main.py`：核心逻辑与评估函数
     - `search.py`：向量检索相关功能
     - `waybill.py`：快递单检索功能
-- `front_end/`：前端单页文件
+- `front_end_vite/`：前端代码文件
 - `data/`：数据文件夹
     - `waybill_mock.json`：模拟快递单数据
 - `docs/`：赔付文档目录
 - `requirements.txt`：依赖列表
 - `.env`：环境变量配置文件
+- `chroma_store/`：Chroma 向量数据库存储目录（自动生成）
 
 ### 快递单数据格式
 ```json
@@ -61,21 +62,28 @@
 ```
 实际上重要的数据为`company`,`insured`,`full_insured`,`cost`,`price`字段，其他字段可根据需要自行添加，无强制要求。
 
-## 运行 FastAPI 服务
+## 项目运行
+### 部署前端
+1) 进入前端目录：`cd front_end_vite`
+2) 安装依赖：`npm install`
+3) 编译静态文件：`npm run build`
+4) 前端界面自动接入FastAPI，无需额外配置
+
+### 运行 FastAPI 服务
 1) 准备环境：`pip install -r requirements.txt`
-3) 启动服务：`uvicorn src.FastApi:app --reload`
-	- 如果你有自己的密钥，运行前设置：`export GOOGLE_API_KEY=your_key`
-    - 建议建立 `.env` 文件，内容为 `GOOGLE_API_KEY=your_key`
-	- 未设置时会使用内置的密钥，默认此密钥无效，需要使用你自己的。
+3) 启动服务：`uvicorn src.FastApi:app`
+    - 建立 `.env` 文件，内容见环境变量API章节
+	- 未设置时会使用内置的密钥，此密钥无效仅作示例
 
 ### 环境变量API
-程序提供Google Gemini和OpenAI兼容模型的API调用支持，可以使用Gemini以及众多兼容OpenAI的LLM，建议在`.env`文件中配置以下变量：
+程序提供Google Gemini和OpenAI兼容模型的API调用支持，可以使用Gemini以及众多兼容OpenAI的LLM，需要在`.env`文件中配置以下变量：
 - `GOOGLE_API_KEY`：Google Gemini API 密钥
 - `OPENAI_API_KEY`：OpenAI 兼容模型 API 密钥
 - `OPENAI_BASE_URL`：OpenAI 兼容模型 API 基础 URL
 - `OPENAI_MODEL`：OpenAI 兼容模型名称
 - `OPENAI_VISION_MODEL`：OpenAI 兼容视觉模型名称（可选）
 
+注意：文本嵌入模型固定使用Genmini Embedding，可能需要科学上网环境
 
 ### Fast API
 - `GET /health`：健康检查
@@ -86,13 +94,13 @@
 - `POST /vision-assess`：上传图片，先分析再输出赔付判定
 - ~~`POST /docs`：请求体 `{ "id": "doc-id", "content": "文本内容", "metadata": {..可选..} }`，写入/更新到向量库并持久化~~（废弃）
 
-已实现自动嵌入新增文本，增加文本功能废弃
+文本嵌入需要手动进行
 
-## 服务端部署
-可以采用caddy进行服务器端部署，供外网直接访问连接
+## 远程服务器部署
+已测试可以采用caddy进行服务器端部署，供远程访问
 
 1) 将全部代码克隆到本地 `git clone`
-2) 配置环境变量文件`.env`（建议）
+2) 配置环境变量文件`.env`
 4) 安装caddy，建议v2以上版本，根据caddy官方教程手动下载并安装
 5) 编写默认位于`/etc/caddy/`下的`CaddyFile`
 
@@ -115,8 +123,8 @@ www.example.com, YOUR_IP {
 ```
 
 3) 启动或者重新启动caddy服务，参考caddy官方教程
-4) 运行FastAPI应用程序
-6) 你现在应该可以看到FastAPI给出的相应，此时通过你的域名或服务器IP即可访问此应用程序前端
-7) ~~建议正式运行前进行向量数据库部署，即转换txt到chroma中~~ （已实现运行时嵌入，无需预先部署）
+4) 运行上述部署流程
+5) 你现在应该可以看到FastAPI给出的相应，此时通过你的域名或服务器IP即可访问此应用程序前端
+6) 实际运行前需要维护数据库，上传txt文档到`docs/`目录下，之后点击嵌入文本即可完成文档嵌入
 
 Made with ❤️ by Buterr
