@@ -17,10 +17,16 @@ from .main import assess_package_stateful
 app = FastAPI(title="Packages Checker API")
 load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env", override=False)
 
-FRONTEND_DIR = Path(__file__).resolve().parent.parent / "front_end"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+VITE_DIST_DIR = PROJECT_ROOT / "front_end_vite" / "dist"
+LEGACY_DIR = PROJECT_ROOT / "front_end"
+FRONTEND_DIR = VITE_DIST_DIR if VITE_DIST_DIR.exists() else LEGACY_DIR
 INDEX_FILE = FRONTEND_DIR / "index.html"
-INFO_FILE = FRONTEND_DIR / "info.html"
-app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
+if (FRONTEND_DIR / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")
+if FRONTEND_DIR == LEGACY_DIR:
+    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 
 class VisionAssessResponse(BaseModel):
@@ -49,11 +55,12 @@ async def index():
     return FileResponse(INDEX_FILE)
 
 
+@app.get("/info", response_class=FileResponse)
 @app.get("/info.html", response_class=FileResponse)
 async def info():
-    if not INFO_FILE.exists():
-        raise HTTPException(status_code=404, detail="info not found")
-    return FileResponse(INFO_FILE)
+    if not INDEX_FILE.exists():
+        raise HTTPException(status_code=404, detail="frontend not found")
+    return FileResponse(INDEX_FILE)
 
 
 @app.get("/health")
