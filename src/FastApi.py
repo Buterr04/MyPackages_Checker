@@ -7,6 +7,7 @@ from typing import Any
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from .database import get_vector_store, ingest_txt_folder, upsert_text_doc
@@ -18,6 +19,8 @@ load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env", overrid
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "front_end"
 INDEX_FILE = FRONTEND_DIR / "index.html"
+INFO_FILE = FRONTEND_DIR / "info.html"
+app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 
 class VisionAssessResponse(BaseModel):
@@ -44,6 +47,13 @@ async def index():
     if not INDEX_FILE.exists():
         raise HTTPException(status_code=404, detail="frontend not found")
     return FileResponse(INDEX_FILE)
+
+
+@app.get("/info.html", response_class=FileResponse)
+async def info():
+    if not INFO_FILE.exists():
+        raise HTTPException(status_code=404, detail="info not found")
+    return FileResponse(INFO_FILE)
 
 
 @app.get("/health")

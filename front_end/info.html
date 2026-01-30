@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Packages Checker 使用说明</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <h1>使用说明</h1>
+        <div class="hint">快速了解如何使用包裹检测与赔付评估系统。</div>
+      </div>
+      <div class="tag">指南</div>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <div class="row"><h3>图像评估</h3><span class="tag">/vision-assess</span></div>
+        <p>上传包裹图片，系统会自动识别破损并给出赔付结论。</p>
+        <ul>
+          <li>可选填写运单号，用于获取运单信息。</li>
+          <li>运单号：WB1001，WB1002等</li>
+          <li>可选选择模型提供商（Gemini / OpenAI / OpenAI Compatible）。</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="row"><h3>规则文档</h3><span class="tag">/docs</span></div>
+        <p>上传更新赔付条款文档，系统会用于后续 RAG 检索。</p>
+        <ul>
+          <li>系统文档可以批量进行更新</li>
+          <li>点击“刷新向量库”按钮，系统会自动检索docs/下的文档并嵌入向量库。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="row"><h3>接口与调试</h3><span class="tag">/docs/list</span></div>
+      <p>可通过接口查看向量库中文档列表：</p>
+      <pre>GET /docs/list</pre>
+      <p>如需手动触发文档入库：</p>
+      <pre>POST /docs/ingest</pre>
+    </div>
+
+    <div style="margin-top:16px; display:flex; gap:8px;">
+      <a class="tag" href="/">返回主页</a>
+    </div>
+  </div>
+</body>
+</html>

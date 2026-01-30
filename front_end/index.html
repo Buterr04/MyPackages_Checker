@@ -4,91 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Packages Checker</title>
-  <style>
-    :root {
-      --bg: #0b1220;
-      --panel: #111a2e;
-      --accent: #5ce1e6;
-      --text: #f4f7fb;
-      --muted: #8ba0c2;
-      --border: #1e2a44;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
-      background: radial-gradient(circle at 20% 20%, rgba(92,225,230,0.1), transparent 35%),
-                  radial-gradient(circle at 80% 0%, rgba(92,225,230,0.12), transparent 30%),
-                  var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 32px 16px 48px;
-      display: flex;
-      justify-content: center;
-    }
-    .shell {
-      width: min(1200px, 100%);
-    }
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-      gap: 12px;
-    }
-    h1 { margin: 0; font-size: 28px; letter-spacing: 0.02em; }
-    .hint { color: var(--muted); font-size: 14px; }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 16px;
-    }
-    .card {
-      background: linear-gradient(145deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 12px 28px rgba(0,0,0,0.25);
-      backdrop-filter: blur(6px);
-    }
-    label { display: block; color: var(--muted); margin-bottom: 6px; font-size: 14px; }
-    textarea, input[type="file"], button, select {
-      width: 100%;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: #0f1728;
-      color: var(--text);
-      padding: 12px;
-      font-size: 15px;
-      transition: border 0.2s ease, box-shadow 0.2s ease;
-    }
-    textarea { min-height: 160px; resize: vertical; }
-    input[type="file"] { padding: 10px; }
-    button {
-      cursor: pointer;
-      background: linear-gradient(120deg, #5ce1e6, #7cf1c4);
-      color: #0b1220;
-      border: none;
-      font-weight: 600;
-      letter-spacing: 0.01em;
-      box-shadow: 0 10px 20px rgba(92,225,230,0.25);
-    }
-    button:hover { box-shadow: 0 12px 26px rgba(92,225,230,0.35); }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-    textarea:focus, input[type="file"]:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(92,225,230,0.2); }
-    pre {
-      background: #0f1728;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-size: 14px;
-      color: #e7ecf5;
-    }
-    .row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
-    .tag { padding: 4px 10px; border-radius: 999px; background: rgba(92,225,230,0.1); color: var(--accent); border: 1px solid rgba(92,225,230,0.4); font-size: 12px; }
-  </style>
+  <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
   <div class="shell">
@@ -97,7 +13,10 @@
         <h1>Packages Checker包裹检测器</h1>
         <div class="hint">上传图像进行检测，或维护/扩展规则文档。</div>
       </div>
-      <div class="tag">FastAPI</div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <a class="tag" href="/info.html">使用说明</a>
+        <div class="tag">FastAPI</div>
+      </div>
     </header>
 
     <div class="grid">
