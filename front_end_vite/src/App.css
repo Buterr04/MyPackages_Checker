@@ -46,10 +46,12 @@ body {
   position: relative;
   z-index: 2;
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .shell {
-  width: min(1200px, 100%);
+  width: min(1040px, 100%);
   margin: 0 auto;
 }
 
@@ -74,13 +76,15 @@ h1 {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(500px, 1fr));
+  grid-template-columns: repeat(2, 500px);
   gap: 16px;
+  width: 100%;
+  justify-content: center;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -90,6 +94,7 @@ h1 {
 
 .glass-card {
   width: 100%;
+  min-width: 0;
 }
 
 .glass-card.glass-surface {
@@ -169,6 +174,7 @@ pre {
   padding: 12px;
   white-space: pre-wrap;
   word-break: break-word;
+  overflow-wrap: anywhere;
   font-size: 14px;
   color: #e7ecf5;
 }
