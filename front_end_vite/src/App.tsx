@@ -1,5 +1,8 @@
 import { useMemo, useState, type FormEvent } from "react";
 import "./App.css";
+import Aurora from "./components/Aurora";
+import GlassSurface from "./components/GlassSurface";
+import SplashCursor from "./components/SplashCursor";
 
 type VisionResponse = {
   analysis?: unknown;
@@ -149,8 +152,8 @@ function HomePage() {
     <div className="shell">
       <header>
         <div>
-          <h1>Packages Checker包裹检测器</h1>
-          <div className="hint">上传图像进行检测，或维护/扩展规则文档。</div>
+          <h1>包裹识别智能赔付系统</h1>
+          <div className="hint">上传图像进行识别和赔付评估</div>
         </div>
         <div className="nav-group">
           <a className="tag" href="/info">使用说明</a>
@@ -159,7 +162,7 @@ function HomePage() {
       </header>
 
       <div className="grid">
-        <div className="card">
+        <GlassSurface className="card glass-card" borderRadius={18} backgroundOpacity={0.2}>
           <div className="row">
             <h3>图像评估</h3>
             <span className="tag">/vision-assess</span>
@@ -180,22 +183,6 @@ function HomePage() {
               运单号（可选）
             </label>
             <input type="text" id="vision-waybill" name="vision-waybill" placeholder="例如：WB1001" />
-            <label htmlFor="vision-insured" style={{ marginTop: 8 }}>
-              是否保价
-            </label>
-            <select id="vision-insured" name="vision-insured">
-              <option value="">未提供</option>
-              <option value="true">是</option>
-              <option value="false">否</option>
-            </select>
-            <label htmlFor="vision-full-insured" style={{ marginTop: 8 }}>
-              是否足额保价
-            </label>
-            <select id="vision-full-insured" name="vision-full-insured">
-              <option value="">未提供</option>
-              <option value="true">是</option>
-              <option value="false">否</option>
-            </select>
             <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
               <button type="submit" id="vision-submit" disabled={visionBusy}>
                 分析与评估
@@ -216,9 +203,9 @@ function HomePage() {
               <pre id="vision-reasons">{visionReasons}</pre>
             </div>
           </div>
-        </div>
+        </GlassSurface>
 
-        <div className="card">
+        <GlassSurface className="card glass-card" borderRadius={18} backgroundOpacity={0.2}>
           <div className="row">
             <h3>上传文档</h3>
             <span className="tag">/docs</span>
@@ -247,7 +234,7 @@ function HomePage() {
             <label>结果</label>
             <pre id="doc-result">{docResult}</pre>
           </div>
-        </div>
+        </GlassSurface>
       </div>
     </div>
   );
@@ -270,20 +257,20 @@ function InfoPage() {
       </header>
 
       <div className="grid">
-        <div className="card">
+        <GlassSurface className="card glass-card" borderRadius={18} backgroundOpacity={0.2}>
           <div className="row">
-            <h3>图像评估</h3>
+            <h3>图像评估决策</h3>
             <span className="tag">/vision-assess</span>
           </div>
           <p>上传包裹图片，系统会自动识别破损并给出赔付结论。</p>
           <ul>
             <li>可选填写运单号（如：WB1001），用于获取运单信息。</li>
-            <li>可选选择模型提供商（Gemini / OpenAI / OpenAI Compatible）。</li>
+            <li>选择模型提供商（Gemini / OpenAI / OpenAI Compatible）。</li>
             <li>可选填写保价与足额保价信息。</li>
           </ul>
-        </div>
+        </GlassSurface>
 
-        <div className="card">
+        <GlassSurface className="card glass-card" borderRadius={18} backgroundOpacity={0.2}>
           <div className="row">
             <h3>规则文档</h3>
             <span className="tag">/docs</span>
@@ -294,18 +281,7 @@ function InfoPage() {
             <li>元数据 JSON 可选（例如来源、公司等）。</li>
             <li>如需批量更新，点击“刷新向量库”按钮。</li>
           </ul>
-        </div>
-      </div>
-
-      <div className="card" style={{ marginTop: 16 }}>
-        <div className="row">
-          <h3>接口与调试</h3>
-          <span className="tag">/docs/list</span>
-        </div>
-        <p>可通过接口查看向量库中文档列表：</p>
-        <pre>GET /docs/list</pre>
-        <p>如需手动触发文档入库：</p>
-        <pre>POST /docs/ingest</pre>
+        </GlassSurface>
       </div>
     </div>
   );
@@ -313,7 +289,23 @@ function InfoPage() {
 
 function App() {
   const page = usePage();
-  return page === "info" ? <InfoPage /> : <HomePage />;
+  return (
+    <div className="app-root">
+      <div className="aurora-layer">
+        <Aurora colorStops={["#0a1a2f", "#5ce1e6", "#7cf1c4"]} amplitude={1.2} blend={0.45} />
+      </div>
+      <div className="splash-layer">
+        <SplashCursor
+          BACK_COLOR={{ r: 0.02, g: 0.05, b: 0.08 }}
+          SHADING={true}
+          SPLAT_FORCE={500}
+          DENSITY_DISSIPATION={4.5}
+          VELOCITY_DISSIPATION={3.2}
+        />
+      </div>
+      <div className="content-layer">{page === "info" ? <InfoPage /> : <HomePage />}</div>
+    </div>
+  );
 }
 
 export default App;
