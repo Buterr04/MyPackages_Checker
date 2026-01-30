@@ -89,23 +89,7 @@ h1 {
 }
 
 .card {
-  border-radius: 18px;
-}
-
-.glass-card {
   width: 100%;
-  min-width: 0;
-}
-
-.glass-card.glass-surface {
-  width: 100%;
-}
-
-.glass-card .glass-surface__content {
-  display: block;
-  align-items: unset;
-  justify-content: unset;
-  padding: 18px;
 }
 
 label {

@@ -1,8 +1,8 @@
 import { useMemo, useState, type FormEvent } from "react";
 import "./App.css";
 import Aurora from "./components/Aurora";
-import GlassSurface from "./components/GlassSurface";
 import SplashCursor from "./components/SplashCursor";
+import SpotlightCard from "./components/SpotlightCard";
 
 type VisionResponse = {
   analysis?: unknown;
@@ -162,7 +162,7 @@ function HomePage() {
       </header>
 
       <div className="grid">
-        <GlassSurface className="card glass-card" borderRadius={18} backgroundOpacity={0.2}>
+        <SpotlightCard className="card">
           <div className="row">
             <h3>图像评估</h3>
             <span className="tag">/vision-assess</span>
@@ -203,9 +203,9 @@ function HomePage() {
               <pre id="vision-reasons">{visionReasons}</pre>
             </div>
           </div>
-        </GlassSurface>
+        </SpotlightCard>
 
-        <GlassSurface className="card glass-card" borderRadius={18} backgroundOpacity={0.2}>
+        <SpotlightCard className="card">
           <div className="row">
             <h3>上传文档</h3>
             <span className="tag">/docs</span>
@@ -234,7 +234,7 @@ function HomePage() {
             <label>结果</label>
             <pre id="doc-result">{docResult}</pre>
           </div>
-        </GlassSurface>
+        </SpotlightCard>
       </div>
     </div>
   );
@@ -257,7 +257,7 @@ function InfoPage() {
       </header>
 
       <div className="grid">
-        <GlassSurface className="card glass-card" borderRadius={18} backgroundOpacity={0.2}>
+        <SpotlightCard className="card">
           <div className="row">
             <h3>图像评估决策</h3>
             <span className="tag">/vision-assess</span>
@@ -268,9 +268,9 @@ function InfoPage() {
             <li>选择模型提供商（Gemini / OpenAI / OpenAI Compatible）。</li>
             <li>可选填写保价与足额保价信息。</li>
           </ul>
-        </GlassSurface>
+        </SpotlightCard>
 
-        <GlassSurface className="card glass-card" borderRadius={18} backgroundOpacity={0.2}>
+        <SpotlightCard className="card">
           <div className="row">
             <h3>规则文档</h3>
             <span className="tag">/docs</span>
@@ -281,7 +281,7 @@ function InfoPage() {
             <li>元数据 JSON 可选（例如来源、公司等）。</li>
             <li>如需批量更新，点击“刷新向量库”按钮。</li>
           </ul>
-        </GlassSurface>
+        </SpotlightCard>
       </div>
     </div>
   );
