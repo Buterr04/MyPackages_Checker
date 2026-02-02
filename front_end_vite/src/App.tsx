@@ -3,6 +3,7 @@ import "./App.css";
 import Aurora from "./components/Aurora";
 import SplashCursor from "./components/SplashCursor";
 import SpotlightCard from "./components/SpotlightCard";
+import GlassSurface from "./components/GlassSurface";
 
 type VisionResponse = {
   analysis?: unknown;
@@ -151,15 +152,27 @@ function HomePage() {
 
   return (
     <div className="shell">
-      <header>
+      <div className="topbar-sticky">
+        <GlassSurface className="topbar-glass" width="90%" height="50px" backgroundOpacity={0.1} borderRadius={999}>
+          <div className="topbar-inner">
+            <div className="topbar-logo" aria-hidden="true">
+              RB
+            </div>
+            <div className="topbar-actions">
+              <nav className="topbar-links">
+                <a href="/">Home</a>
+                <a href="/info">Docs</a>
+                <a href="/waybills">Waybills</a>
+              </nav>
+              <div className="topbar-menu">☰</div>
+            </div>
+          </div>
+        </GlassSurface>
+      </div>
+      <header className="header-stack">
         <div>
           <h1>包裹识别智能赔付系统</h1>
           <div className="hint">上传图像进行识别和赔付评估</div>
-        </div>
-        <div className="nav-group">
-          <a className="tag" href="/info">使用说明</a>
-          <a className="tag" href="/waybills">面单维护</a>
-          <span className="tag">FastAPI</span>
         </div>
       </header>
 
@@ -348,14 +361,27 @@ function WaybillPage() {
 
   return (
     <div className="shell">
-      <header>
+      <div className="topbar-sticky">
+        <GlassSurface className="topbar-glass" width="90%" height="60px" backgroundOpacity={0.1} borderRadius={999}>
+          <div className="topbar-inner">
+            <div className="topbar-logo" aria-hidden="true">
+              RB
+            </div>
+            <div className="topbar-actions">
+              <nav className="topbar-links">
+                <a href="/">Home</a>
+                <a href="/info">Docs</a>
+                <a href="/waybills">Waybills</a>
+              </nav>
+              <div className="topbar-menu">☰</div>
+            </div>
+          </div>
+        </GlassSurface>
+      </div>
+      <header className="header-stack">
         <div>
           <h1>面单维护</h1>
           <div className="hint">新增、查询或导入快递面单数据。</div>
-        </div>
-        <div className="nav-group">
-          <a className="tag" href="/">返回主页</a>
-          <a className="tag" href="/info">使用说明</a>
         </div>
       </header>
 
@@ -517,16 +543,27 @@ function WaybillPage() {
 function InfoPage() {
   return (
     <div className="shell">
-      <header>
+      <div className="topbar-sticky">
+        <GlassSurface className="topbar-glass" width="90%" height="60px" backgroundOpacity={0.1} borderRadius={999}>
+          <div className="topbar-inner">
+            <div className="topbar-logo" aria-hidden="true">
+              RB
+            </div>
+            <div className="topbar-actions">
+              <nav className="topbar-links">
+                <a href="/">Home</a>
+                <a href="/info">Docs</a>
+                <a href="/waybills">Waybills</a>
+              </nav>
+              <div className="topbar-menu">☰</div>
+            </div>
+          </div>
+        </GlassSurface>
+      </div>
+      <header className="header-stack">
         <div>
           <h1>使用说明</h1>
           <div className="hint">快速了解如何使用包裹检测与赔付评估系统。</div>
-        </div>
-        <div className="nav-group">
-          <a className="tag" href="/">
-            返回主页
-          </a>
-          <span className="tag">指南</span>
         </div>
       </header>
 
