@@ -115,6 +115,7 @@ price: 物品声明价值
 - `GET /docs`：FastAPI 交互式文档
 - `GET /docs/list`：列出已存储的文档列表
 - `POST /docs`：请求体 `{ "id": "doc-id", "content": "文本内容", "metadata": {..可选..} }`，写入/更新向量库
+- `POST /docs/upload`：上传规则文件并保存到 `docs/`
 - `POST /docs/ingest`：手动扫描 docs 目录并写入向量库
 - `POST /vision`：上传图片文件，返回图像分析 JSON
 - `POST /vision-assess`：上传图片，先分析再输出赔付判定

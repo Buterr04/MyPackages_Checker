@@ -97,6 +97,21 @@ async def add_doc(payload: AddDocRequest):
     return {"id": payload.id, "message": "ok"}
 
 
+@app.post("/docs/upload")
+async def upload_doc(file: UploadFile = File(...)):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="filename is required")
+    docs_dir = Path("docs")
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    dest = docs_dir / file.filename
+    try:
+        content = await file.read()
+        dest.write_bytes(content)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"filename": file.filename, "saved_to": str(dest)}
+
+
 @app.post("/docs/ingest")
 async def ingest_docs():
     try:
