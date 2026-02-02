@@ -5,12 +5,14 @@ import SplashCursor from "./components/SplashCursor";
 import DetectPage from "./pages/DetectPage";
 import HomePage from "./pages/HomePage";
 import InfoPage from "./pages/InfoPage";
+import RulesPage from "./pages/RulesPage";
 import WaybillPage from "./pages/WaybillPage";
 
 function usePage() {
   return useMemo(() => {
     const path = window.location.pathname.toLowerCase();
     if (path === "/detect" || path === "/detect.html") return "detect";
+    if (path === "/rules" || path === "/rules.html") return "rules";
     if (path === "/info" || path === "/info.html") return "info";
     if (path === "/waybills" || path === "/waybills.html") return "waybills";
     return "home";
@@ -36,6 +38,8 @@ function App() {
       <div className="content-layer">
         {page === "detect" ? (
           <DetectPage />
+        ) : page === "rules" ? (
+          <RulesPage />
         ) : page === "info" ? (
           <InfoPage />
         ) : page === "waybills" ? (

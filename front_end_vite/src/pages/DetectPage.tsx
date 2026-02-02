@@ -15,10 +15,6 @@ function DetectPage() {
   const [visionReasons, setVisionReasons] = useState("等待中...");
   const [visionBusy, setVisionBusy] = useState(false);
 
-  const [docResult, setDocResult] = useState("等待中...");
-  const [docBusy, setDocBusy] = useState(false);
-  const [ingestBusy, setIngestBusy] = useState(false);
-
   const parseOptionalBool = (value: string) => {
     if (value === "true") return true;
     if (value === "false") return false;
@@ -88,56 +84,6 @@ function DetectPage() {
     }
   };
 
-  const handleDocSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const id = form.querySelector<HTMLInputElement>("#doc-id")?.value.trim() ?? "";
-    const content = form.querySelector<HTMLTextAreaElement>("#doc-content")?.value.trim() ?? "";
-    const metaRaw = form.querySelector<HTMLTextAreaElement>("#doc-meta")?.value.trim() ?? "";
-    if (!id || !content) {
-      setDocResult("请提供文档ID和内容。");
-      return;
-    }
-    let metadata: any = undefined;
-    if (metaRaw) {
-      try {
-        metadata = JSON.parse(metaRaw);
-      } catch {
-        setDocResult("元数据JSON无效");
-        return;
-      }
-    }
-    setDocBusy(true);
-    setDocResult("正在提交...");
-    try {
-      const res = await fetch("/docs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, content, metadata }),
-      });
-      const data = await res.json();
-      setDocResult(res.ok ? JSON.stringify(data, null, 2) : data.detail || "错误");
-    } catch (err: any) {
-      setDocResult(err?.message || String(err));
-    } finally {
-      setDocBusy(false);
-    }
-  };
-
-  const handleDocIngest = async () => {
-    setIngestBusy(true);
-    setDocResult("正在刷新向量库...");
-    try {
-      const res = await fetch("/docs/ingest", { method: "POST" });
-      const data = await res.json();
-      setDocResult(res.ok ? JSON.stringify(data, null, 2) : data.detail || "错误");
-    } catch (err: any) {
-      setDocResult(err?.message || String(err));
-    } finally {
-      setIngestBusy(false);
-    }
-  };
-
   return (
     <div className="shell">
       <Topbar />
@@ -194,32 +140,22 @@ function DetectPage() {
 
         <SpotlightCard className="card">
           <div className="row">
-            <h3>上传文档</h3>
-            <span className="tag">/docs</span>
+            <h3>赔付报告</h3>
+            <span className="tag">report</span>
           </div>
-          <form id="doc-form" onSubmit={handleDocSubmit}>
-            <label htmlFor="doc-id">文档ID</label>
-            <input type="text" id="doc-id" name="doc-id" placeholder="policy-001" />
-            <label htmlFor="doc-content" style={{ marginTop: 8 }}>
-              内容
-            </label>
-            <textarea id="doc-content" name="doc-content" placeholder="赔付规则或说明文本" />
-            <label htmlFor="doc-meta" style={{ marginTop: 8 }}>
-              元数据 (JSON，可选)
-            </label>
-            <textarea id="doc-meta" name="doc-meta" placeholder='{"source":"manual"}' />
-            <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-              <button type="submit" id="doc-submit" disabled={docBusy}>
-                添加 / 更新
-              </button>
-              <button type="button" id="doc-ingest" onClick={handleDocIngest} disabled={ingestBusy}>
-                刷新向量库
-              </button>
+          <div className="stack">
+            <div>
+              <label>结论</label>
+              <pre>{visionResult}</pre>
             </div>
-          </form>
-          <div style={{ marginTop: 12 }}>
-            <label>结果</label>
-            <pre id="doc-result">{docResult}</pre>
+            <div>
+              <label>依据摘要</label>
+              <pre>{visionReasons}</pre>
+            </div>
+            <div>
+              <label>说明</label>
+              <pre>可在此扩展赔付金额、规则引用与审核意见。</pre>
+            </div>
           </div>
         </SpotlightCard>
       </div>

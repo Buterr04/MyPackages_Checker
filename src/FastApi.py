@@ -83,6 +83,14 @@ async def detect():
     return FileResponse(INDEX_FILE)
 
 
+@app.get("/rules", response_class=FileResponse)
+@app.get("/rules.html", response_class=FileResponse)
+async def rules_page():
+    if not INDEX_FILE.exists():
+        raise HTTPException(status_code=404, detail="frontend not built")
+    return FileResponse(INDEX_FILE)
+
+
 @app.get("/waybills", response_class=FileResponse)
 @app.get("/waybills.html", response_class=FileResponse)
 async def waybills_page():
