@@ -34,3 +34,4 @@ htmlcov/
 # Datasets and database
 damaged-and-intact-packages/
 /chroma_store
+data/waybills.db

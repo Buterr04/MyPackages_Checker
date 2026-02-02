@@ -8,12 +8,13 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from datetime import date
 from pydantic import BaseModel
 
 from .database import get_vector_store, ingest_txt_folder, upsert_text_doc
 from .vision_router import analyze_image_bytes_with_provider
 from .main import assess_package_stateful
-from .waybill_db import init_db, upsert_waybill
+from .waybill_db import import_from_excel_bytes, import_from_json, init_db, upsert_waybill
 from .waybill import query_waybill_data
 
 app = FastAPI(title="Packages Checker API")
@@ -46,7 +47,7 @@ class WaybillPayload(BaseModel):
     full_insured: bool | None = None
     weight: float | None = None
     signed: bool | None = None
-    signed_at: str | None = None
+    signed_at: date | None = None
     status: str | None = None
     cost: float | None = None
     price: float | None = None
@@ -69,6 +70,14 @@ async def index():
 @app.get("/info", response_class=FileResponse)
 @app.get("/info.html", response_class=FileResponse)
 async def info():
+    if not INDEX_FILE.exists():
+        raise HTTPException(status_code=404, detail="frontend not built")
+    return FileResponse(INDEX_FILE)
+
+
+@app.get("/waybills", response_class=FileResponse)
+@app.get("/waybills.html", response_class=FileResponse)
+async def waybills_page():
     if not INDEX_FILE.exists():
         raise HTTPException(status_code=404, detail="frontend not built")
     return FileResponse(INDEX_FILE)
@@ -115,6 +124,27 @@ async def get_waybill_api(waybill_no: str):
     if not record or "error" in record:
         raise HTTPException(status_code=404, detail="waybill_not_found")
     return record
+
+
+@app.post("/waybills/import")
+async def import_waybills():
+    try:
+        count = import_from_json(Path("data") / "waybill_mock.json")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"imported": count}
+
+
+@app.post("/waybills/import-excel")
+async def import_waybills_excel(file: UploadFile = File(...)):
+    if not file.filename.endswith((".xlsx", ".xls")):
+        raise HTTPException(status_code=400, detail="Unsupported file type")
+    try:
+        content = await file.read()
+        imported, skipped = import_from_excel_bytes(content)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"imported": imported, "skipped": skipped}
 
 
 @app.get("/docs/list")

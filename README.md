@@ -12,6 +12,7 @@
 - **快递单信息集成**：结合用户提供的快递单信息，获取决策依据
 - **规则驱动的赔付决策**：利用RAG增强检索获取赔付规则，自动计算赔付金额进行理赔
 - **多模型支持**：支持 Google Gemini 模型和 OpenAI 兼容模型
+- **快速维护数据**：支持快递单数据维护和赔付规则文档的快速更新与嵌入
 
 ## 技术栈
 - **Agent 框架**：LangChain
@@ -60,7 +61,8 @@ cost: 快递费用
 price: 物品声明价值
 ```
 
-#### 快递单JSON数据格式（备用）
+#### 快递单JSON数据（备用&示例）
+当数据库内无对应数据会自动检索`data/waybill_mock.json` JSON文件进行导入，格式如下：
 ```json
 {
   "WB1001": {  //快递单号
@@ -109,15 +111,18 @@ price: 物品声明价值
 以下为主要API端点：
 详细测试可运行项目后使用 `127.0.0.1:8000/docs` 查看自动生成的Swagger文档
 - `GET /health`：健康检查
-- `GET /`：前端单页（图片评估~~与规则文档维护~~）
+- `GET /`：前端单页（图片评估与规则文档维护）
 - `GET /docs`：FastAPI 交互式文档
 - `GET /docs/list`：列出已存储的文档列表
+- `POST /docs`：请求体 `{ "id": "doc-id", "content": "文本内容", "metadata": {..可选..} }`，写入/更新向量库
+- `POST /docs/ingest`：手动扫描 docs 目录并写入向量库
 - `POST /vision`：上传图片文件，返回图像分析 JSON
 - `POST /vision-assess`：上传图片，先分析再输出赔付判定
-- `GET /waybill/{waybill_id}`：根据快递单号获取快递单信息
-- ~~`POST /docs`：请求体 `{ "id": "doc-id", "content": "文本内容", "metadata": {..可选..} }`，写入/更新到向量库并持久化~~（废弃）
+- `POST /waybills`：新增/更新运单（数据库）
+- `GET /waybills/{waybill_no}`：按运单号查询
+- `POST /waybills/import`：从 `data/waybill_mock.json` 导入运单数据
+- `POST /waybills/import-excel`：上传 Excel 导入运单数据
 
-文本嵌入需要手动进行
 
 ## 远程服务器部署
 已测试可以采用caddy进行服务器端部署，供远程访问
@@ -148,6 +153,6 @@ www.example.com, YOUR_IP {
 3) 启动或者重新启动caddy服务，参考caddy官方教程
 4) 运行上述部署流程
 5) 你现在应该可以看到FastAPI给出的相应，此时通过你的域名或服务器IP即可访问此应用程序前端
-6) 实际运行前需要维护数据库，上传txt文档到`docs/`目录下，之后点击嵌入文本即可完成文档嵌入
+6) 点击刷新向量数据库即可完成初始化
 
 Made with ❤️ by Buterr
