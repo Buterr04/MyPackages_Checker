@@ -13,6 +13,8 @@ from pydantic import BaseModel
 from .database import get_vector_store, ingest_txt_folder, upsert_text_doc
 from .vision_router import analyze_image_bytes_with_provider
 from .main import assess_package_stateful
+from .waybill_db import init_db, upsert_waybill
+from .waybill import query_waybill_data
 
 app = FastAPI(title="Packages Checker API")
 load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env", override=False)
@@ -37,10 +39,24 @@ class AddDocRequest(BaseModel):
     metadata: dict | None = None
 
 
+class WaybillPayload(BaseModel):
+    waybill_no: str
+    company: str | None = None
+    insured: bool | None = None
+    full_insured: bool | None = None
+    weight: float | None = None
+    signed: bool | None = None
+    signed_at: str | None = None
+    status: str | None = None
+    cost: float | None = None
+    price: float | None = None
+    route: list[str] | None = None
+
+
 @app.on_event("startup")
 async def _startup():
-    # Startup is kept lightweight; ingestion is manual via endpoint.
-    pass
+    # Initialize SQLite tables for waybills.
+    init_db()
 
 
 @app.get("/", response_class=FileResponse)
@@ -79,6 +95,26 @@ async def ingest_docs():
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"message": "ingest_started"}
+
+
+@app.post("/waybills")
+async def upsert_waybill_api(payload: WaybillPayload):
+    try:
+        record = upsert_waybill(payload.model_dump())
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return record.model_dump(exclude={"id"})
+
+
+@app.get("/waybills/{waybill_no}")
+async def get_waybill_api(waybill_no: str):
+    try:
+        record = query_waybill_data(waybill_no)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if not record or "error" in record:
+        raise HTTPException(status_code=404, detail="waybill_not_found")
+    return record
 
 
 @app.get("/docs/list")

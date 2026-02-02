@@ -6,3 +6,4 @@ python-dotenv==1.2.1
 python-multipart==0.0.21
 fastapi==0.128.0
 langchain-openai==1.1.7
+sqlmodel==0.0.25

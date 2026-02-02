@@ -19,6 +19,7 @@
 - **大语言模型**：Google Gemini, OpenAI，OpenAI兼容模型
 - **向量数据库**：Chroma
 - **前端**：Vite + React
+- **数据库**：SQLite + SQLModel
 - **动效库**：[ReactBits](https://reactbits.dev)
 
 ## 项目结构
@@ -32,15 +33,34 @@
     - `main.py`：核心逻辑与评估函数
     - `search.py`：向量检索相关功能
     - `waybill.py`：快递单检索功能
+    - `waybill_db.py`：快递单数据库操作
 - `front_end_vite/`：前端代码文件
 - `data/`：数据文件夹
     - `waybill_mock.json`：模拟快递单数据
+    - `waybills.db`：快递单数据库 (自动生成)
 - `docs/`：赔付文档目录
 - `requirements.txt`：依赖列表
 - `.env`：环境变量配置文件
 - `chroma_store/`：Chroma 向量数据库存储目录（自动生成）
 
-### 快递单数据格式
+### 快递单数据库
+字段定义
+```
+id: 快递单号（主键）
+waybill_no: 快递单号
+company: 快递公司名称
+insured: 是否保价
+full_insured: 是否全额保价
+weight: 快递重量（可选）
+signed: 是否签收(可选)
+signed_at: 签收日期(可选)
+route: 运输路线（可选）
+status: 快递状态(可选)
+cost: 快递费用
+price: 物品声明价值
+```
+
+#### 快递单JSON数据格式（备用）
 ```json
 {
   "WB1001": {  //快递单号
@@ -53,7 +73,7 @@
     "route": ["SZ", "GZ", "SH"],  //运输路线（可选）
     "status": "delivered",  //快递状态(可选)
     "cost":30,  //快递费用
-    "price": 100.0  //快递价格
+    "price": 100.0  //物品声明价值
   },
   {
     ...
@@ -86,12 +106,15 @@
 注意：文本嵌入模型固定使用Genmini Embedding，可能需要科学上网环境
 
 ### Fast API
+以下为主要API端点：
+详细测试可运行项目后使用 `127.0.0.1:8000/docs` 查看自动生成的Swagger文档
 - `GET /health`：健康检查
- - `GET /`：前端单页（图片评估~~与规则文档维护~~）
-- `GET /docs`：FastAPI 自动生成的交互式 API 文档
+- `GET /`：前端单页（图片评估~~与规则文档维护~~）
+- `GET /docs`：FastAPI 交互式文档
 - `GET /docs/list`：列出已存储的文档列表
 - `POST /vision`：上传图片文件，返回图像分析 JSON
 - `POST /vision-assess`：上传图片，先分析再输出赔付判定
+- `GET /waybill/{waybill_id}`：根据快递单号获取快递单信息
 - ~~`POST /docs`：请求体 `{ "id": "doc-id", "content": "文本内容", "metadata": {..可选..} }`，写入/更新到向量库并持久化~~（废弃）
 
 文本嵌入需要手动进行
