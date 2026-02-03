@@ -23,6 +23,13 @@ load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env", overrid
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 VITE_DIST_DIR = PROJECT_ROOT / "front_end_vite" / "dist"
 INDEX_FILE = VITE_DIST_DIR / "index.html"
+FAVICON_FILES: dict[str, str] = {
+    "favicon.ico": "image/x-icon",
+    "favicon-16.png": "image/png",
+    "favicon-32.png": "image/png",
+    "favicon-48.png": "image/png",
+    "glass-box-256.png": "image/png",
+}
 
 if (VITE_DIST_DIR / "assets").exists():
     app.mount("/assets", StaticFiles(directory=VITE_DIST_DIR / "assets"), name="assets")
@@ -65,6 +72,17 @@ async def index():
     if not INDEX_FILE.exists():
         raise HTTPException(status_code=404, detail="frontend not built")
     return FileResponse(INDEX_FILE)
+
+
+for filename, media_type in FAVICON_FILES.items():
+    route_path = f"/{filename}"
+    file_path = VITE_DIST_DIR / filename
+
+    @app.get(route_path, response_class=FileResponse)
+    async def _favicon(file_path: Path = file_path, media_type: str = media_type):
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="file not found")
+        return FileResponse(file_path, media_type=media_type)
 
 
 @app.get("/info", response_class=FileResponse)

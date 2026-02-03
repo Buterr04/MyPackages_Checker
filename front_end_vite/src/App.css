@@ -3,6 +3,9 @@
   --accent: #5ce1e6;
   --text: #f4f7fb;
   --muted: #a7b6d6;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
 }
 
 * {
@@ -11,7 +14,7 @@
 
 body {
   margin: 0;
-  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-family: -apple-system, "SF Pro Text", "SF Pro Display", "Segoe UI", system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -136,6 +139,14 @@ body {
   color: #f7fbff;
 }
 
+.hero-secondary:hover {
+  transform: translateY(-1px);
+}
+
+.hero-secondary:hover .glass-surface__content {
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+}
+
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -206,7 +217,7 @@ button,
 select,
 input[type="text"] {
   width: 100%;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(8, 13, 23, 0.6);
   color: var(--text);
@@ -255,7 +266,7 @@ input[type="text"]:focus {
 pre {
   background: rgba(8, 13, 23, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 12px;
   white-space: pre-wrap;
   word-break: break-word;
@@ -317,7 +328,7 @@ pre {
   width: 36px;
   height: 36px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: none;
   color: #ffffff;
   display: grid;
   place-items: center;
@@ -351,6 +362,13 @@ pre {
 
 .topbar-links a:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+
+.topbar-links a.is-active {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
 }
 
 .topbar-menu {
@@ -392,7 +410,7 @@ pre {
     margin: 10px auto 0;
     width: min(1100px, 96%);
     padding: 0;
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     transform-origin: top center;
     max-height: 0;
     opacity: 0;
@@ -428,11 +446,18 @@ pre {
     text-decoration: none;
     font-weight: 600;
     padding: 6px 8px;
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
   }
 
   .topbar-mobile-links a:hover {
     background: rgba(255, 255, 255, 0.08);
+  }
+
+  .topbar-mobile-links a.is-active {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px) saturate(1.2);
+    -webkit-backdrop-filter: blur(10px) saturate(1.2);
   }
 }
 .stack {
