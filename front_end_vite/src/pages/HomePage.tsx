@@ -9,7 +9,7 @@ function HomePage() {
 
       <section className="hero">
         <GlassSurface className="hero-badge" width="auto" height="40px" backgroundOpacity={0.1} borderRadius={999}>
-          <span>Super Shiny</span>
+          <span>包裹检测</span>
         </GlassSurface>
 
         <h1 className="hero-title">包裹智能识别赔付系统</h1>

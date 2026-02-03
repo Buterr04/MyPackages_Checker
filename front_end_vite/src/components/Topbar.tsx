@@ -21,7 +21,7 @@ function Topbar() {
               <a className={isActive("/detect") ? "is-active" : ""} href="/detect">检测</a>
               <a className={isActive("/rules") ? "is-active" : ""} href="/rules">规则</a>
               <a className={isActive("/waybills") ? "is-active" : ""} href="/waybills">运单</a>
-              <a className={isActive("/info") ? "is-active" : ""} href="/info">文档</a>
+              <a className={isActive("/info") ? "is-active" : ""} href="/info">关于</a>
             </nav>
             <button
               className="topbar-menu"
@@ -42,7 +42,7 @@ function Topbar() {
             <a className={isActive("/detect") ? "is-active" : ""} href="/detect">检测</a>
             <a className={isActive("/rules") ? "is-active" : ""} href="/rules">规则</a>
             <a className={isActive("/waybills") ? "is-active" : ""} href="/waybills">运单</a>
-            <a className={isActive("/info") ? "is-active" : ""} href="/info">文档</a>
+            <a className={isActive("/info") ? "is-active" : ""} href="/info">关于</a>
           </nav>
         </GlassSurface>
       </div>
