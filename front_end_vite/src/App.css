@@ -328,7 +328,7 @@ pre {
   width: 36px;
   height: 36px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: none;
   color: #ffffff;
   display: grid;
   place-items: center;

@@ -28,6 +28,7 @@ FAVICON_FILES: dict[str, str] = {
     "favicon-16.png": "image/png",
     "favicon-32.png": "image/png",
     "favicon-48.png": "image/png",
+    "glass-box-256.png": "image/png",
 }
 
 if (VITE_DIST_DIR / "assets").exists():

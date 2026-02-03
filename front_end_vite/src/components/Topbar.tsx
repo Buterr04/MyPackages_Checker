@@ -13,7 +13,7 @@ function Topbar() {
       <GlassSurface className="topbar-glass" height="46px" backgroundOpacity={0.1} borderRadius={999}>
         <div className="topbar-inner">
           <div className="topbar-logo" aria-hidden="true">
-            RB
+            <img src="/glass-box-256.png" alt="Menu Icon" />
           </div>
           <div className="topbar-actions">
             <nav className="topbar-links">
