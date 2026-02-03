@@ -9,7 +9,6 @@ function HomePage() {
 
       <section className="hero">
         <GlassSurface className="hero-badge" width="auto" height="40px" backgroundOpacity={0.1} borderRadius={999}>
-          <span className="hero-badge-icon">✦</span>
           <span>Super Shiny</span>
         </GlassSurface>
 
@@ -20,9 +19,11 @@ function HomePage() {
           <a className="hero-primary" style={{ width: "160px", height: "44px" }} href="/detect" >
             开始检测
           </a>
-          <GlassSurface className="hero-secondary" width="160px" height="44px" backgroundOpacity={0.08} borderRadius={999}>
-            了解更多
-          </GlassSurface>
+          <a href="/info">
+            <GlassSurface className="hero-secondary" width="160px" height="44px" backgroundOpacity={0.08} borderRadius={999}>
+              了解更多
+            </GlassSurface>
+          </a>
         </div>
       </section>
 

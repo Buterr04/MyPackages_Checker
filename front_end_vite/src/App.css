@@ -139,6 +139,14 @@ body {
   color: #f7fbff;
 }
 
+.hero-secondary:hover {
+  transform: translateY(-1px);
+}
+
+.hero-secondary:hover .glass-surface__content {
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+}
+
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
