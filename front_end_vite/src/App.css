@@ -3,6 +3,9 @@
   --accent: #5ce1e6;
   --text: #f4f7fb;
   --muted: #a7b6d6;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
 }
 
 * {
@@ -11,7 +14,7 @@
 
 body {
   margin: 0;
-  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-family: -apple-system, "SF Pro Text", "SF Pro Display", "Segoe UI", system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -206,7 +209,7 @@ button,
 select,
 input[type="text"] {
   width: 100%;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(8, 13, 23, 0.6);
   color: var(--text);
@@ -255,7 +258,7 @@ input[type="text"]:focus {
 pre {
   background: rgba(8, 13, 23, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 12px;
   white-space: pre-wrap;
   word-break: break-word;
@@ -392,7 +395,7 @@ pre {
     margin: 10px auto 0;
     width: min(1100px, 96%);
     padding: 0;
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
     transform-origin: top center;
     max-height: 0;
     opacity: 0;
@@ -428,7 +431,7 @@ pre {
     text-decoration: none;
     font-weight: 600;
     padding: 6px 8px;
-    border-radius: 10px;
+    border-radius: var(--radius-sm);
   }
 
   .topbar-mobile-links a:hover {

@@ -5,7 +5,7 @@ function Topbar() {
   const [open, setOpen] = useState(false);
   return (
     <div className="topbar-sticky">
-      <GlassSurface className="topbar-glass" width="90%" height="50px" backgroundOpacity={0.1} borderRadius={999}>
+      <GlassSurface className="topbar-glass" height="50px" backgroundOpacity={0.1} borderRadius={26}>
         <div className="topbar-inner">
           <div className="topbar-logo" aria-hidden="true">
             RB
