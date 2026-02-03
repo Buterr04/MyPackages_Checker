@@ -364,6 +364,13 @@ pre {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.topbar-links a.is-active {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+}
+
 .topbar-menu {
   display: none;
   width: 30px;
@@ -444,6 +451,13 @@ pre {
 
   .topbar-mobile-links a:hover {
     background: rgba(255, 255, 255, 0.08);
+  }
+
+  .topbar-mobile-links a.is-active {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px) saturate(1.2);
+    -webkit-backdrop-filter: blur(10px) saturate(1.2);
   }
 }
 .stack {
