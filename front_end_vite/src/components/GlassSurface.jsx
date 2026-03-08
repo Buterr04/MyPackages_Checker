@@ -10,6 +10,7 @@ const GlassSurface = ({
   brightness = 50,
   opacity = 0.93,
   blur = 11,
+  backdropBlur = null,
   displace = 0,
   backgroundOpacity = 0,
   saturation = 1,
@@ -166,6 +167,9 @@ const GlassSurface = ({
     '--glass-saturation': saturation,
     '--filter-id': `url(#${filterId})`
   };
+  if (typeof backdropBlur === 'number') {
+    containerStyle['--glass-backdrop-blur'] = `${backdropBlur}px`;
+  }
 
   return (
     <div

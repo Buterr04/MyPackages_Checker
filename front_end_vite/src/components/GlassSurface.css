@@ -30,8 +30,12 @@
 }
 
 .glass-surface--svg {
-  background: light-dark(hsl(0 0% 100% / var(--glass-frost, 0)), hsl(0 0% 0% / var(--glass-frost, 0)));
-  backdrop-filter: var(--filter-id, url(#glass-filter)) saturate(var(--glass-saturation, 1));
+  background: light-dark(
+    hsl(0 0% 100% / calc(var(--glass-frost, 0) * var(--glass-frost-multiplier, 1))),
+    hsl(0 0% 0% / calc(var(--glass-frost, 0) * var(--glass-frost-multiplier, 1)))
+  );
+  backdrop-filter: blur(var(--glass-backdrop-blur, 24px)) var(--filter-id, url(#glass-filter)) saturate(var(--glass-saturation, 1));
+  -webkit-backdrop-filter: blur(var(--glass-backdrop-blur, 24px)) var(--filter-id, url(#glass-filter)) saturate(var(--glass-saturation, 1));
   box-shadow:
     0 0 2px 1px light-dark(color-mix(in oklch, black, transparent 85%), color-mix(in oklch, white, transparent 65%))
       inset,
@@ -46,9 +50,9 @@
 }
 
 .glass-surface--fallback {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(18px) saturate(1.6);
-  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  background: rgba(255, 255, 255, var(--glass-bg-alpha, 0.08));
+  backdrop-filter: blur(var(--glass-backdrop-blur, 24px)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--glass-backdrop-blur, 24px)) saturate(1.6);
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.16),
@@ -73,9 +77,9 @@
 
 @media (prefers-color-scheme: dark) {
   .glass-surface--fallback {
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(18px) saturate(1.6);
-    -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    background: rgba(255, 255, 255, var(--glass-bg-alpha-dark, 0.06));
+    backdrop-filter: blur(var(--glass-backdrop-blur, 24px)) saturate(1.6);
+    -webkit-backdrop-filter: blur(var(--glass-backdrop-blur, 24px)) saturate(1.6);
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow:
       0 8px 24px rgba(0, 0, 0, 0.2),
