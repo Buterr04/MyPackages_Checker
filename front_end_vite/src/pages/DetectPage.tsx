@@ -7,6 +7,8 @@ type VisionResponse = {
   result?: string;
   reasons?: string[] | null;
   rag?: string | null;
+  annotated_image_base64?: string | null;
+  annotated_image_mime?: string | null;
 };
 
 function DetectPage() {
@@ -14,6 +16,7 @@ function DetectPage() {
   const [visionAnalysis, setVisionAnalysis] = useState("等待中...");
   const [visionReasons, setVisionReasons] = useState("等待中...");
   const [visionBusy, setVisionBusy] = useState(false);
+  const [visionAnnotatedImage, setVisionAnnotatedImage] = useState<string | null>(null);
 
   const parseOptionalBool = (value: string) => {
     if (value === "true") return true;
@@ -45,6 +48,7 @@ function DetectPage() {
     setVisionAnalysis("正在分析图像...");
     setVisionResult("正在评估...");
     setVisionReasons("正在生成依据...");
+    setVisionAnnotatedImage(null);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -61,6 +65,10 @@ function DetectPage() {
         const raw = (analysis as any).raw ?? analysis;
         setVisionAnalysis(raw ? JSON.stringify(raw, null, 2) : JSON.stringify(analysis, null, 2));
         setVisionResult(data.result ?? JSON.stringify(data, null, 2));
+        if (data.annotated_image_base64) {
+          const mime = data.annotated_image_mime || "image/png";
+          setVisionAnnotatedImage(`data:${mime};base64,${data.annotated_image_base64}`);
+        }
         if (Array.isArray(data.reasons) && data.reasons.length) {
           setVisionReasons(data.reasons.join("; "));
         } else if (data.rag) {
@@ -128,6 +136,18 @@ function DetectPage() {
             <div>
               <label>评估结果</label>
               <pre id="vision-result">{visionResult}</pre>
+            </div>
+            <div>
+              <label>识别框图像</label>
+              {visionAnnotatedImage ? (
+                <img
+                  src={visionAnnotatedImage}
+                  alt="识别框图像"
+                  style={{ width: "100%", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)" }}
+                />
+              ) : (
+                <pre>暂无识别框图像</pre>
+              )}
             </div>
             <div>
               <label>图像分析（JSON）</label>

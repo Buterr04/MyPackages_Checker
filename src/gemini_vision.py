@@ -37,14 +37,17 @@ def _build_prompt(image_base64: str) -> HumanMessage:
                 "text": (
                     "Check this image and describe if this package is damaged or not. "
                     "If it is damaged, tell me where is the damage,for example: 'top left corner', or 'inside the box', etc. "
-                    "Combine the damaged areas with the whole package,"
-                    "give me the percentages."
-                    "Return ONLY a JSON object with no markdown or backslash. "
-                    "JSON format: {\"is_damaged\": true/false,"
-                    "\"damage_location\","
-                    "\"damaged_percentage\","
-                    "\"damage_severity\": \"low/medium/high\"}"
-                ),
+                "Combine the damaged areas with the whole package,"
+                "give me the percentages."
+                "Return ONLY a JSON object with no markdown or backslash. "
+                "JSON format: {\"is_damaged\": true/false,"
+                "\"damage_location\": \"...\","
+                "\"damaged_percentage\": number,"
+                "\"damage_severity\": \"low/medium/high\","
+                "\"damage_boxes\": [{\"label\": \"...\", "
+                "\"x_min\": 0-1, \"y_min\": 0-1, \"x_max\": 0-1, \"y_max\": 0-1,"
+                " \"confidence\": 0-1}]}"
+            ),
             },
             {"type": "image_url", "image_url": f"data:image/jpeg;base64,{image_base64}"},
         ]

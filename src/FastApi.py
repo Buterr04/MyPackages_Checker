@@ -1,5 +1,6 @@
 """FastAPI application exposing assessment and vision endpoints."""
 
+import base64
 import json
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,7 @@ from pydantic import BaseModel
 
 from .database import get_vector_store, ingest_txt_folder, upsert_text_doc
 from .vision_router import analyze_image_bytes_with_provider
+from .vision_overlay import annotate_image_bytes, extract_damage_boxes
 from .main import assess_package_stateful
 from .waybill_db import import_from_excel_bytes, import_from_json, init_db, upsert_waybill
 from .waybill import query_waybill_data
@@ -39,6 +41,8 @@ class VisionAssessResponse(BaseModel):
     result: str | None = None
     reasons: list[str] | None = None
     rag: str | None = None
+    annotated_image_base64: str | None = None
+    annotated_image_mime: str | None = None
 
 
 class AddDocRequest(BaseModel):
@@ -220,7 +224,18 @@ async def vision(
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    return analysis
+    payload = analysis if isinstance(analysis, dict) else {"raw": analysis}
+    parsed = payload.get("parsed") if isinstance(payload, dict) else None
+    boxes = extract_damage_boxes(parsed)
+    if boxes:
+        try:
+            annotated_bytes, annotated_mime = annotate_image_bytes(image_bytes, boxes)
+            payload["annotated_image_base64"] = base64.b64encode(annotated_bytes).decode("utf-8")
+            payload["annotated_image_mime"] = annotated_mime
+        except Exception:
+            pass
+
+    return payload
 
 
 @app.post("/vision-assess", response_model=VisionAssessResponse)
@@ -240,7 +255,8 @@ async def vision_assess(
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    raw = analysis.get("raw") if isinstance(analysis, dict) else analysis
+    payload = analysis if isinstance(analysis, dict) else {"raw": analysis}
+    raw = payload.get("raw")
     description = raw if isinstance(raw, str) else json.dumps(raw, ensure_ascii=False)
     try:
         outcome = assess_package_stateful(
@@ -254,9 +270,23 @@ async def vision_assess(
         )
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    annotated_image_base64 = None
+    annotated_image_mime = None
+    parsed = payload.get("parsed")
+    boxes = extract_damage_boxes(parsed)
+    if boxes:
+        try:
+            annotated_bytes, annotated_mime = annotate_image_bytes(image_bytes, boxes)
+            annotated_image_base64 = base64.b64encode(annotated_bytes).decode("utf-8")
+            annotated_image_mime = annotated_mime
+        except Exception:
+            pass
+
     return {
-        "analysis": analysis,
+        "analysis": payload,
         "result": outcome.get("decision"),
         "reasons": outcome.get("reasons"),
         "rag": outcome.get("rag_text"),
+        "annotated_image_base64": annotated_image_base64,
+        "annotated_image_mime": annotated_image_mime,
     }

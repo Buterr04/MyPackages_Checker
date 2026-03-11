@@ -36,9 +36,12 @@ def _build_prompt(image_base64: str) -> HumanMessage:
                     "give me the percentages. "
                     "Return ONLY a JSON object with no markdown or backslash. "
                     "JSON format: {\"is_damaged\": true/false, "
-                    "\"damage_location\","
-                    "\"damaged_percentage\", "
-                    "\"damage_severity\": \"low/medium/high\"}"
+                    "\"damage_location\": \"...\","
+                    "\"damaged_percentage\": number, "
+                    "\"damage_severity\": \"low/medium/high\", "
+                    "\"damage_boxes\": [{\"label\": \"...\", "
+                    "\"x_min\": 0-1, \"y_min\": 0-1, \"x_max\": 0-1, \"y_max\": 0-1, "
+                    "\"confidence\": 0-1}]}"
                 ),
             },
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}},
