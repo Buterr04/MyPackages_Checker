@@ -34,11 +34,16 @@ def _build_prompt(image_base64: str) -> HumanMessage:
                     "'top left corner', or 'inside the box', etc. "
                     "Combine the damaged areas with the whole package, "
                     "give me the percentages. "
+                    "必须完全忽略图像上的文字，不能把文字识别的结果当成判断包裹是否损坏的依据。"
+                    "如果没有检测到包裹，则在JSON中注明 \"damaged_location\": \"no package\""
                     "Return ONLY a JSON object with no markdown or backslash. "
                     "JSON format: {\"is_damaged\": true/false, "
-                    "\"damage_location\","
-                    "\"damaged_percentage\", "
-                    "\"damage_severity\": \"low/medium/high\"}"
+                    "\"damage_location\": \"...\","
+                    "\"damaged_percentage\": number, "
+                    "\"damage_severity\": \"low/medium/high\", "
+                    "\"damage_boxes\": [{\"label\": \"...\", "
+                    "\"x_min\": 0-1, \"y_min\": 0-1, \"x_max\": 0-1, \"y_max\": 0-1, "
+                    "\"confidence\": 0-1}]}"
                 ),
             },
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}},

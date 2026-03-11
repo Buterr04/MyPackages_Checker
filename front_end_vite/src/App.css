@@ -6,6 +6,10 @@
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 18px;
+  --glass-backdrop-blur: 14px;
+  --glass-frost-multiplier: 0.68;
+  --glass-bg-alpha: 0.05;
+  --glass-bg-alpha-dark: 0.04;
 }
 
 * {
@@ -385,9 +389,32 @@ pre {
   cursor: pointer;
 }
 
+.topbar-glass-toggle {
+  width: auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: none;
+}
+
+.topbar-glass-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: none;
+}
+
 @media (max-width: 900px) {
   .topbar-links {
     display: none;
+  }
+
+  .topbar-glass-toggle {
+    padding: 6px 10px;
+    font-size: 11px;
   }
 
   .topbar-menu {
