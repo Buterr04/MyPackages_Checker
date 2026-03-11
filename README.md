@@ -30,6 +30,7 @@
     - `openai_vision.py`：调用 OpenAI 兼容视觉模型 API 的封装
     - `providers.py`：LLM 模型提供者选择封装
     - `vision_router.py`：视觉模型相关 FastAPI 路由
+    - `vision_overlay.py`：创建图像评估结果叠加图
     - `database.py`：向量数据库操作
     - `main.py`：核心逻辑与评估函数
     - `search.py`：向量检索相关功能
@@ -117,7 +118,7 @@ price: 物品声明价值
 - ~~`POST /docs`：请求体 `{ "id": "doc-id", "content": "文本内容", "metadata": {..可选..} }`，写入/更新向量库~~
 - `POST /docs/upload`：上传规则文件并保存到 `docs/`
 - `POST /docs/ingest`：手动扫描 docs 目录并写入向量库
-- `POST /vision`：上传图片文件，返回图像分析 JSON
+- `POST /vision`：上传图片文件，返回图像分析 JSON以及评估结果叠加图
 - `POST /vision-assess`：上传图片，先分析再输出赔付判定
 - `POST /waybills`：新增/更新运单（数据库）
 - `GET /waybills/{waybill_no}`：按运单号查询
