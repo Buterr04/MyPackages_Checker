@@ -101,9 +101,7 @@ function DetectPage() {
             <span className="tag">/vision-assess</span>
           </div>
           <form id="vision-form" onSubmit={handleVisionSubmit}>
-            <label htmlFor="image">上传图像 (jpg/png/webp)</label>
-            <input type="file" id="image" name="image" accept="image/*" />
-            <label htmlFor="vision-provider" style={{ marginTop: 8 }}>
+            <label htmlFor="vision-provider" style={{ marginTop: 12 }}>
               模型提供商
             </label>
             <select id="vision-provider" name="vision-provider">
@@ -112,10 +110,14 @@ function DetectPage() {
               <option value="openai">OpenAI</option>
               <option value="openai_compat">OpenAI Compatible</option>
             </select>
-            <label htmlFor="vision-waybill" style={{ marginTop: 8 }}>
-              运单号（可选）
+            <label htmlFor="vision-waybill" style={{ marginTop:  12 }}>
+              运单号
             </label>
             <input type="text" id="vision-waybill" name="vision-waybill" placeholder="例如：WB1001" />
+            <label htmlFor="image" style={{ marginTop: 12 }}>
+              上传图像 (jpg/png/webp)
+              </label>
+            <input type="file" id="image" name="image" accept="image/*" />
             <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
               <button type="submit" id="vision-submit" disabled={visionBusy}>
                 分析与评估
