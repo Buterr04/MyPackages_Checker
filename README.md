@@ -4,6 +4,12 @@
 
 题目：基于大模型 Agent 的物流包裹破损智能识别与赔付决策系统
 
+
+<img src="https://img.shields.io/badge/Typescript-%23007ACC.svg?logo=typescript&logoColor=white"> <img src="https://img.shields.io/badge/Python-3776AB?logo=Python&logoColor=ffffff">
+
+<img src="https://img.shields.io/badge/Python-3.9%2B-blue"> <img src="https://img.shields.io/github/license/Buterr04/MyPackages_Checker.svg">
+
+
 ## 项目简介
 本项目旨在开发一个基于大语言模型（LLM）和视觉模型的智能系统，用于识别物流包裹的破损情况并做出相应的赔付决策。系统通过分析用户上传的包裹图片，结合快递单信息和赔付规则，自动判断是否应进行赔付以及赔付金额，并给出详细赔付报告
 
