@@ -4,6 +4,7 @@
 
 题目：基于大模型 Agent 的物流包裹破损智能识别与赔付决策系统
 
+![MyPackages_Checker](https://socialify.git.ci/Buterr04/MyPackages_Checker/image?language=1&owner=1&name=1&stargazers=1&theme=Light)
 
 <img src="https://img.shields.io/badge/Typescript-%23007ACC.svg?logo=typescript&logoColor=white"> <img src="https://img.shields.io/badge/Python-3776AB?logo=Python&logoColor=ffffff">
 
