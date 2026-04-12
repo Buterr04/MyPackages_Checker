@@ -1,15 +1,22 @@
-# MyPackages_Checker
-
-本项目为北京邮电大学毕业设计项目
-
-题目：基于大模型 Agent 的物流包裹破损智能识别与赔付决策系统
-
-![MyPackages_Checker](https://socialify.git.ci/Buterr04/MyPackages_Checker/image?language=1&owner=1&name=1&stargazers=1&theme=Light)
-
-<img src="https://img.shields.io/badge/Typescript-%23007ACC.svg?logo=typescript&logoColor=white"> <img src="https://img.shields.io/badge/Python-3776AB?logo=Python&logoColor=ffffff">
-
-<img src="https://img.shields.io/badge/Python-3.9%2B-blue"> <img src="https://img.shields.io/github/license/Buterr04/MyPackages_Checker.svg">
-
+<div align="center"> 
+<h1>MyPackages_Checker</h1>
+<p>本项目为北京邮电大学毕业设计项目</p>
+<p>题目：基于大模型 Agent 的物流包裹破损智能识别与赔付决策系统</p>
+<p>
+  <img src="https://img.shields.io/github/stars/Buterr04/MyPackages_Checker.svg?style=social">
+  <img src="https://img.shields.io/github/issues/Buterr04/MyPackages_Checker.svg">
+  <img src="https://img.shields.io/github/license/Buterr04/MyPackages_Checker.svg">
+  <img src="https://img.shields.io/badge/Language-Python-blue?logo=python&logoColor=white">
+  <img src="https://img.shields.io/badge/Framework-FastAPI-green?logo=fastapi&logoColor=white">
+  <img src="https://img.shields.io/badge/LLM-Google%20Gemini-yellow?logo=google&logoColor=white">
+  <img src="https://img.shields.io/badge/Vector%20DB-Chroma-purple?logo=chromadb&logoColor=white">
+  <img src="https://img.shields.io/badge/Frontend-Vite%20%2B%20React-pink?logo=react&logoColor=white">
+  <img src="https://img.shields.io/badge/Database-SQLite-lightgrey?logo=sqlite&logoColor=white">
+  <img src="https://img.shields.io/badge/Animation%20Library-ReactBits-blueviolet?logo=react&logoColor=white">
+  
+  </p>
+  <img src=https://socialify.git.ci/Buterr04/MyPackages_Checker/image?custom_language=Python&issues=1&language=1&name=1&owner=1&stargazers=1&theme=Light />
+</div>
 
 ## 项目简介
 本项目旨在开发一个基于大语言模型（LLM）和视觉模型的智能系统，用于识别物流包裹的破损情况并做出相应的赔付决策。系统通过分析用户上传的包裹图片，结合快递单信息和赔付规则，自动判断是否应进行赔付以及赔付金额，并给出详细赔付报告
