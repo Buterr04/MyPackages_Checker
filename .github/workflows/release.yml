@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: front_end_vite/package-lock.json
+
+      - name: Build frontend
+        run: |
+          npm ci
+          npm run build
+        working-directory: front_end_vite
+
+      - name: Set archive name
+        run: echo "ARCHIVE_NAME=MyPackages_Checker-${GITHUB_REF_NAME}-deploy.tar.gz" >> "$GITHUB_ENV"
+
+      - name: Create deploy archive
+        run: |
+          tar -czf "$ARCHIVE_NAME" \
+            src \
+            docs \
+            data \
+            front_end_vite/dist \
+            front_end_vite/index.html \
+            DEPLOY.md \
+            requirements.txt \
+            README.md \
+            LICENSE
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ARCHIVE_NAME }}
+          generate_release_notes: true

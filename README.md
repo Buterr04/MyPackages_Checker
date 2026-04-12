@@ -171,4 +171,24 @@ www.example.com, YOUR_IP {
 5) 你现在应该可以看到FastAPI给出的相应，此时通过你的域名或服务器IP即可访问此应用程序前端
 6) 点击刷新向量数据库即可完成初始化
 
+## GitHub Release 自动发布
+仓库已支持使用 GitHub Actions 自动创建 Release。
+
+触发方式：
+- 推送版本标签时自动创建 Release，例如：`v1.0.0`
+- 也可在 GitHub Actions 页面手动触发
+
+推荐流程：
+1) 提交并推送代码
+2) 创建标签：`git tag v1.0.0`
+3) 推送标签：`git push origin v1.0.0`
+4) GitHub Actions 会自动创建对应 Release，并附带自动生成的更新说明和源码压缩包
+
+说明：
+- Release Notes 使用 GitHub 自动生成
+- Release 附件为部署包：`MyPackages_Checker-版本号-deploy.tar.gz`
+- 部署包会自动构建前端，并包含 `src/`、`docs/`、`data/`、`front_end_vite/dist/`、`requirements.txt` 等部署所需文件
+- 部署包额外附带 `DEPLOY.md`，用于说明服务器解压、安装依赖、配置 `.env`、启动服务和反向代理流程
+- 部署包不包含 `.env`、`.git`、`node_modules`、本地数据库与缓存文件，敏感配置需在部署环境中自行提供
+
 Made with ❤️ by Buterr
