@@ -1,12 +1,14 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import Aurora from "./components/Aurora";
+import ErrorModal from "./components/ErrorModal";
 import SplashCursor from "./components/SplashCursor";
 import DetectPage from "./pages/DetectPage";
 import HomePage from "./pages/HomePage";
 import InfoPage from "./pages/InfoPage";
 import RulesPage from "./pages/RulesPage";
 import WaybillPage from "./pages/WaybillPage";
+import { setGlobalApiErrorHandler, type ApiError } from "./lib/api";
 
 function usePage() {
   return useMemo(() => {
@@ -21,6 +23,17 @@ function usePage() {
 
 function App() {
   const page = usePage();
+  const [apiError, setApiError] = useState<ApiError | null>(null);
+
+  useEffect(() => {
+    setGlobalApiErrorHandler((error) => {
+      setApiError(error);
+    });
+    return () => {
+      setGlobalApiErrorHandler(null);
+    };
+  }, []);
+
   return (
     <div className="app-root">
       <div className="aurora-layer">
@@ -48,6 +61,12 @@ function App() {
           <HomePage />
         )}
       </div>
+      <ErrorModal
+        open={Boolean(apiError)}
+        message={apiError?.message || ""}
+        detail={apiError?.detail ? JSON.stringify(apiError.detail, null, 2) : undefined}
+        onClose={() => setApiError(null)}
+      />
     </div>
   );
 }

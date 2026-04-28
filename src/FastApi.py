@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from datetime import date
 from pydantic import BaseModel
@@ -65,10 +66,69 @@ class WaybillPayload(BaseModel):
     route: list[str] | None = None
 
 
+def ok(data: Any = None, message: str = "ok", status_code: int = 200) -> JSONResponse:
+    return JSONResponse(
+        status_code=status_code,
+        content={"success": True, "message": message, "data": data},
+    )
+
+
+def error_response(
+    message: str,
+    *,
+    status_code: int,
+    code: str,
+    detail: Any = None,
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "success": False,
+            "error": {
+                "code": code,
+                "message": message,
+                "detail": detail,
+            },
+        },
+    )
+
+
 @app.on_event("startup")
 async def _startup():
     # Initialize SQLite tables for waybills.
     init_db()
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(_: Request, exc: HTTPException):
+    detail = exc.detail
+    if isinstance(detail, dict):
+        message = str(detail.get("message") or detail.get("detail") or "Request failed")
+        code = str(detail.get("code") or f"http_{exc.status_code}")
+    else:
+        message = str(detail or "Request failed")
+        code = f"http_{exc.status_code}"
+    return error_response(message, status_code=exc.status_code, code=code, detail=detail)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(_: Request, exc: RequestValidationError):
+    return error_response(
+        "Request validation failed",
+        status_code=422,
+        code="validation_error",
+        detail=exc.errors(),
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(_: Request, exc: Exception):
+    return error_response(
+        "Internal server error",
+        status_code=500,
+        code="internal_error",
+        detail=str(exc),
+    )
 
 
 @app.get("/", response_class=FileResponse)
@@ -123,7 +183,7 @@ async def waybills_page():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return ok({"status": "ok"})
 
 
 @app.post("/docs")
@@ -132,7 +192,7 @@ async def add_doc(payload: AddDocRequest):
         upsert_text_doc(payload.id, payload.content, payload.metadata or {})
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return {"id": payload.id, "message": "ok"}
+    return ok({"id": payload.id}, message="Document saved")
 
 
 @app.post("/docs/upload")
@@ -147,7 +207,7 @@ async def upload_doc(file: UploadFile = File(...)):
         dest.write_bytes(content)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return {"filename": file.filename, "saved_to": str(dest)}
+    return ok({"filename": file.filename, "saved_to": str(dest)}, message="Document uploaded")
 
 
 @app.post("/docs/ingest")
@@ -156,7 +216,7 @@ async def ingest_docs():
         ingest_txt_folder("docs")
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return {"message": "ingest_started"}
+    return ok({"started": True}, message="Vector store refresh started")
 
 
 @app.post("/waybills")
@@ -165,7 +225,7 @@ async def upsert_waybill_api(payload: WaybillPayload):
         record = upsert_waybill(payload.model_dump())
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return record.model_dump(exclude={"id"})
+    return ok(record.model_dump(exclude={"id"}), message="Waybill saved")
 
 
 @app.get("/waybills/{waybill_no}")
@@ -176,7 +236,7 @@ async def get_waybill_api(waybill_no: str):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if not record or "error" in record:
         raise HTTPException(status_code=404, detail="waybill_not_found")
-    return record
+    return ok(record)
 
 
 @app.post("/waybills/import")
@@ -185,7 +245,7 @@ async def import_waybills():
         count = import_from_json(Path("data") / "waybill_mock.json")
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return {"imported": count}
+    return ok({"imported": count}, message="Waybills imported")
 
 
 @app.post("/waybills/import-excel")
@@ -197,7 +257,7 @@ async def import_waybills_excel(file: UploadFile = File(...)):
         imported, skipped = import_from_excel_bytes(content)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return {"imported": imported, "skipped": skipped}
+    return ok({"imported": imported, "skipped": skipped}, message="Excel imported")
 
 
 @app.get("/docs/list")
@@ -205,7 +265,7 @@ async def list_docs():
     try:
         store = get_vector_store()
         payload = store.get(include=["metadatas"])
-        return {"ids": payload.get("ids", []), "metadatas": payload.get("metadatas", [])}
+        return ok({"ids": payload.get("ids", []), "metadatas": payload.get("metadatas", [])})
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -235,10 +295,10 @@ async def vision(
         except Exception:
             pass
 
-    return payload
+    return ok(payload, message="Vision analysis completed")
 
 
-@app.post("/vision-assess", response_model=VisionAssessResponse)
+@app.post("/vision-assess")
 async def vision_assess(
     file: UploadFile = File(...),
     insured: bool | None = Form(default=None),
@@ -282,11 +342,11 @@ async def vision_assess(
         except Exception:
             pass
 
-    return {
+    return ok({
         "analysis": payload,
         "result": outcome.get("decision"),
         "reasons": outcome.get("reasons"),
         "rag": outcome.get("rag_text"),
         "annotated_image_base64": annotated_image_base64,
         "annotated_image_mime": annotated_image_mime,
-    }
+    }, message="Vision assessment completed")
