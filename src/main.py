@@ -4,6 +4,7 @@ import base64
 import json
 import os
 from dataclasses import dataclass, field
+from datetime import date
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
@@ -176,6 +177,7 @@ class AgentContext:
     image_bytes: bytes | None = None
     damage_result: dict | None = None
     waybill_result: dict | None = None
+    amount_reference: dict | None = None
     rag_text: str | None = None
     rag_docs: list[Any] = field(default_factory=list)
     decision: str | None = None
@@ -239,6 +241,7 @@ def _llm_decide(ctx: AgentContext) -> str:
     )
     damage_payload = ctx.damage_result or {}
     waybill_payload = ctx.waybill_result or {}
+    amount_reference = ctx.amount_reference or {}
     cost = waybill_payload.get("cost")
     price = waybill_payload.get("price")
     company = waybill_payload.get("company") or ctx.company
@@ -246,13 +249,15 @@ def _llm_decide(ctx: AgentContext) -> str:
         "你是一个物流赔付智能助手。"
         "请根据提供的规则内容与结构化信息给出赔付结论。"
         "若存在对应快递公司的条款，则以公司条款为准；否则使用邮政法作为规则。"
-        "要求：只输出“结论 + 依据”，不要提问，不要虚构。"
+        "赔付金额需要参考给定的金额期望模型，但最终结论仍需受规则约束。"
+        "要求：只输出“结论 + 依据”，并在依据中简要说明是否参考了金额模型，不要提问，不要虚构。"
         "结构化信息如下：\n"
         f"保价情况：{insurance_status}\n"
         f"足额保价情况：{full_insurance_status}\n"
         f"包裹描述：{ctx.description}\n"
         f"图像检测结果：{json.dumps(damage_payload, ensure_ascii=False)}\n"
         f"运单信息：{json.dumps(waybill_payload, ensure_ascii=False)}\n"
+        f"金额参考模型：{json.dumps(amount_reference, ensure_ascii=False)}\n"
         f"快递公司：{company}\n"
         f"运费(cost)：{cost}\n"
         f"货值(price)：{price}\n"
@@ -271,6 +276,107 @@ def _normalize_damage(ctx: AgentContext) -> dict:
         "is_damaged": parsed.get("is_damaged"),
         "damage_severity": parsed.get("damage_severity"),
         "damage_location": parsed.get("damage_location"),
+    }
+
+
+def _to_float(value: Any) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _parse_date(value: Any) -> date | None:
+    if value is None or value == "":
+        return None
+    if isinstance(value, date):
+        return value
+    try:
+        return date.fromisoformat(str(value))
+    except ValueError:
+        return None
+
+
+def _damage_weight_from_result(ctx: AgentContext) -> tuple[float, str]:
+    damage = _normalize_damage(ctx)
+    severity = str(damage.get("damage_severity") or "").strip().lower()
+    is_damaged = damage.get("is_damaged")
+
+    severity_map = {
+        "轻微": 0.2,
+        "轻度": 0.2,
+        "minor": 0.2,
+        "mild": 0.2,
+        "中等": 0.5,
+        "中度": 0.5,
+        "moderate": 0.5,
+        "严重": 0.8,
+        "重度": 0.8,
+        "severe": 0.8,
+        "完全损毁": 1.0,
+        "完全破损": 1.0,
+        "totally_damaged": 1.0,
+        "destroyed": 1.0,
+    }
+    if severity in severity_map:
+        return severity_map[severity], f"按破损等级“{severity}”映射"
+    if is_damaged is True:
+        return 0.5, "已识别为破损，但缺少明确破损等级，使用默认中度权重"
+    return 0.0, "未识别到破损，破损权重记为 0"
+
+
+def _estimate_depreciation_rate(waybill: dict[str, Any]) -> tuple[float, str]:
+    signed_at = _parse_date(waybill.get("signed_at"))
+    if not signed_at:
+        return 0.0, "缺少签收日期，折旧率记为 0"
+
+    days_elapsed = max((date.today() - signed_at).days, 0)
+    monthly_rate = 0.01
+    depreciation = min((days_elapsed / 30.0) * monthly_rate, 0.3)
+    return depreciation, f"按签收日期推算经过 {days_elapsed} 天，采用月折旧 1% 且最高 30% 的启发式估计"
+
+
+def _estimate_residual_value(market_value: float, damage_weight: float) -> tuple[float, str]:
+    if market_value <= 0 or damage_weight <= 0:
+        return 0.0, "无有效货值或无破损，残值记为 0"
+    residual_rate = max(0.0, 1.0 - damage_weight) * 0.2
+    residual_value = market_value * residual_rate
+    return residual_value, f"按剩余完好比例估算残值，残值率={residual_rate:.2%}"
+
+
+def _build_amount_reference(ctx: AgentContext) -> dict:
+    waybill = ctx.waybill_result or {}
+    market_value = _to_float(waybill.get("price")) or 0.0
+    insured_declared_value = market_value if ctx.insured else 0.0
+    damage_weight, damage_weight_note = _damage_weight_from_result(ctx)
+    depreciation_rate, depreciation_note = _estimate_depreciation_rate(waybill)
+    residual_value, residual_note = _estimate_residual_value(market_value, damage_weight)
+
+    capped_value = min(insured_declared_value, market_value)
+    expected_amount = capped_value * damage_weight * (1 - depreciation_rate) - residual_value
+    expected_amount = round(max(expected_amount, 0.0), 2)
+
+    assumptions: list[str] = []
+    if ctx.insured is not True:
+        assumptions.append("未明确已保价时，保价声明价值按 0 处理")
+    else:
+        assumptions.append("当前运单未单独记录保价金额，暂以货值(price)代替保价声明价值")
+    assumptions.append(damage_weight_note)
+    assumptions.append(depreciation_note)
+    assumptions.append(residual_note)
+
+    formula = "E(x)=min(保价声明价值, 市场评估价值) × 破损权重 × (1-折旧率) - 残值"
+    return {
+        "formula": formula,
+        "expected_amount": expected_amount,
+        "insured_declared_value": round(insured_declared_value, 2),
+        "market_value": round(market_value, 2),
+        "damage_weight": round(damage_weight, 4),
+        "depreciation_rate": round(depreciation_rate, 4),
+        "residual_value": round(residual_value, 2),
+        "assumptions": assumptions,
     }
 
 
@@ -385,6 +491,7 @@ def assess_package_stateful(
             continue
 
         if state == AgentState.NEED_RULES:
+            ctx.amount_reference = _build_amount_reference(ctx)
             query = _build_rag_query(ctx)
             rag_text, rag_docs = retrieve_context_data(query)
             ctx.rag_text = rag_text
@@ -402,6 +509,7 @@ def assess_package_stateful(
         "reasons": None,
         "damage_result": ctx.damage_result,
         "waybill_result": ctx.waybill_result,
+        "amount_reference": ctx.amount_reference,
         "rag_text": ctx.rag_text,
         "state_trace": ctx.state_trace,
     }

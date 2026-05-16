@@ -41,6 +41,7 @@ class VisionAssessResponse(BaseModel):
     analysis: Any
     result: str | None = None
     reasons: list[str] | None = None
+    amount_reference: dict[str, Any] | None = None
     rag: str | None = None
     annotated_image_base64: str | None = None
     annotated_image_mime: str | None = None
@@ -346,6 +347,7 @@ async def vision_assess(
         "analysis": payload,
         "result": outcome.get("decision"),
         "reasons": outcome.get("reasons"),
+        "amount_reference": outcome.get("amount_reference"),
         "rag": outcome.get("rag_text"),
         "annotated_image_base64": annotated_image_base64,
         "annotated_image_mime": annotated_image_mime,
