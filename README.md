@@ -107,6 +107,13 @@ price: 物品声明价值
 4) 前端界面自动接入FastAPI，无需额外配置
 
 ### 运行 FastAPI 服务
+
+> **推荐使用虚拟环境**，避免依赖冲突：
+> ```bash
+> python3 -m venv venv
+> source venv/bin/activate
+> ```
+
 1) 准备环境：`pip install -r requirements.txt`
 3) 启动服务：`uvicorn src.FastApi:app`
     - 建立 `.env` 文件，内容见环境变量API章节
