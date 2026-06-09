@@ -348,7 +348,7 @@ async def vision_assess(
         "result": outcome.get("decision"),
         "reasons": outcome.get("reasons"),
         "amount_reference": outcome.get("amount_reference"),
-        "rag": outcome.get("rag_text"),
+        "rag": outcome.get("formatted_articles"),
         "annotated_image_base64": annotated_image_base64,
         "annotated_image_mime": annotated_image_mime,
     }, message="Vision assessment completed")

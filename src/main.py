@@ -14,10 +14,12 @@ from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.messages import HumanMessage
 from langchain.tools import tool
+from .carriers import detect_carrier
 from .database import get_vector_store
 from .providers import get_chat_llm
 from .vision_router import analyze_image_bytes_with_provider, analyze_image_path_with_provider
 from .waybill import query_waybill_data
+from .regulation_extractor import format_articles_for_llm, format_articles_for_output
 
 
 DEFAULT_API_KEY_B64 = "QUl6YVN5QkRITzBnRVg0bk4zSU1lZnFsb1ExVjd2azdVTFZ0YWM4MA=="
@@ -49,13 +51,45 @@ def _extract_text(content: Any) -> str:
 
 
 def retrieve_context_data(query: str):
-    """Retrieve information from the vector store to help answer a query."""
-    docs = get_vector_store().similarity_search(query, k=3)
-    serialized = "\n\n".join(
-        f"Content: {doc.page_content}\nMetadata: {doc.metadata}"
-        for doc in docs
-    )
-    return serialized, docs
+    """Retrieve information from the vector store.
+    
+    With chunk-based ingestion, each article/section is a separate document,
+    so similarity_search naturally returns article-level content.
+    """
+    store = get_vector_store()
+    carrier = detect_carrier(query)
+    search_kwargs: dict[str, Any] = {"query": query, "k": 5}
+    if carrier:
+        search_kwargs["filter"] = {"carrier": carrier}
+    docs = store.similarity_search(**search_kwargs)
+    if carrier and not docs:
+        docs = store.similarity_search(query=query, k=5)
+    
+    # Format articles with metadata for display
+    articles = []
+    for doc in docs:
+        article_num = doc.metadata.get("article", "相关内容")
+        source_file = doc.metadata.get("source_file") or doc.metadata.get("source", "")
+        carrier_name = doc.metadata.get("carrier")
+        label = article_num
+        if article_num == "相关内容" and source_file:
+            label = source_file
+        if carrier_name and carrier_name not in str(label):
+            label = f"{carrier_name} - {label}"
+        articles.append((label, doc.page_content))
+    
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_articles = []
+    for article in articles:
+        if article[0] not in seen:
+            seen.add(article[0])
+            unique_articles.append(article)
+    
+    # Format for LLM usage
+    formatted_for_llm = format_articles_for_llm(unique_articles[:3])
+    
+    return formatted_for_llm, unique_articles
 
 
 @tool(response_format="content_and_artifact")
@@ -504,6 +538,9 @@ def assess_package_stateful(
             state = AgentState.DONE
             continue
 
+    # Format rag_docs for output
+    formatted_articles = format_articles_for_output(ctx.rag_docs) if ctx.rag_docs else None
+    
     return {
         "decision": ctx.decision,
         "reasons": None,
@@ -511,5 +548,6 @@ def assess_package_stateful(
         "waybill_result": ctx.waybill_result,
         "amount_reference": ctx.amount_reference,
         "rag_text": ctx.rag_text,
+        "formatted_articles": formatted_articles,
         "state_trace": ctx.state_trace,
     }

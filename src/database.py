@@ -2,14 +2,17 @@
 
 import base64
 import os
+import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+from .carriers import merge_carrier_metadata
 
 PERSIST_DIR = "chroma_store"
 COLLECTION_NAME = "foo"
@@ -39,7 +42,8 @@ def add_txt_file(file_path: str):
     store = get_vector_store()
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
-    doc = Document(page_content=content, metadata={"source": file_path})
+    metadata = merge_carrier_metadata({"source": file_path}, file_path, content)
+    doc = Document(page_content=content, metadata=metadata)
     store.add_documents(documents=[doc], ids=[file_path])
 
 
@@ -55,7 +59,7 @@ def upsert_text_doc(doc_id: str, content: str, metadata: Optional[Dict] = None, 
         raise ValueError("content is required")
 
     store = get_vector_store()
-    metadata = metadata or {}
+    metadata = merge_carrier_metadata(metadata, doc_id, content)
     store.delete(ids=[doc_id])
     doc = Document(page_content=content, metadata=metadata)
     store.add_documents(documents=[doc], ids=[doc_id])
@@ -63,9 +67,12 @@ def upsert_text_doc(doc_id: str, content: str, metadata: Optional[Dict] = None, 
         _persist_store(store)
 
 
-def read_docs(query: str, k: int = 2):
+def read_docs(query: str, k: int = 2, carrier: str | None = None):
     store = get_vector_store()
-    return store.similarity_search(query=query, k=k)
+    search_kwargs = {"query": query, "k": k}
+    if carrier:
+        search_kwargs["filter"] = {"carrier": carrier}
+    return store.similarity_search(**search_kwargs)
 
 
 def update_doc(doc_id: str, new_doc: Document):
@@ -92,15 +99,117 @@ def is_empty() -> bool:
         return False
 
 
+def _chunk_document_by_lines(file_path: str, content: str) -> List[Tuple[str, str, Dict]]:
+    """Split document into chunks by lines with merge logic.
+    
+    Strategy: Group lines together, merging small lines until reaching min size.
+    - Min chunk size: 200 characters
+    - Max chunk size: 1000 characters
+    - Preserves document structure by respecting line boundaries
+    
+    Returns: List of (chunk_id, chunk_content, metadata)
+    """
+    chunks = []
+    file_name = Path(file_path).stem
+    base_metadata = merge_carrier_metadata(
+        {
+            "source": file_path,
+            "source_file": file_name,
+        },
+        file_name,
+        file_path,
+        content,
+    )
+    
+    lines = content.split('\n')
+    MIN_CHUNK_SIZE = 200
+    MAX_CHUNK_SIZE = 1000
+    
+    current_chunk_lines = []
+    current_chunk_size = 0
+    chunk_index = 0
+    
+    for line in lines:
+        line = line.rstrip()
+        line_size = len(line)
+        
+        # Skip empty lines unless they're meaningful separators
+        if not line.strip():
+            # If we have accumulated content, check if we should flush it
+            if current_chunk_lines and current_chunk_size >= MIN_CHUNK_SIZE:
+                chunk_content = '\n'.join(current_chunk_lines).strip()
+                if chunk_content:
+                    chunk_id = f"{file_path}#line_{chunk_index}"
+                    metadata = {
+                        **base_metadata,
+                        "chunk_type": "lines",
+                        "chunk_index": chunk_index
+                    }
+                    chunks.append((chunk_id, chunk_content, metadata))
+                    chunk_index += 1
+                    current_chunk_lines = []
+                    current_chunk_size = 0
+            continue
+        
+        # Check if adding this line would exceed max size
+        if current_chunk_size + line_size + 1 > MAX_CHUNK_SIZE and current_chunk_lines:
+            # Flush current chunk
+            chunk_content = '\n'.join(current_chunk_lines).strip()
+            if chunk_content:
+                chunk_id = f"{file_path}#line_{chunk_index}"
+                metadata = {
+                    **base_metadata,
+                    "chunk_type": "lines",
+                    "chunk_index": chunk_index
+                }
+                chunks.append((chunk_id, chunk_content, metadata))
+                chunk_index += 1
+            current_chunk_lines = []
+            current_chunk_size = 0
+        
+        # Add line to current chunk
+        current_chunk_lines.append(line)
+        current_chunk_size += line_size + 1  # +1 for newline
+    
+    # Flush remaining chunk if it meets min size
+    if current_chunk_lines:
+        chunk_content = '\n'.join(current_chunk_lines).strip()
+        if len(chunk_content) >= MIN_CHUNK_SIZE or chunk_index == 0:  # Always add first chunk
+            chunk_id = f"{file_path}#line_{chunk_index}"
+            metadata = {
+                **base_metadata,
+                "chunk_type": "lines",
+                "chunk_index": chunk_index
+            }
+            chunks.append((chunk_id, chunk_content, metadata))
+    
+    return chunks
+
+
 def ingest_txt_folder(folder_path: str):
+    """Ingest txt files from folder, splitting by lines with merge logic."""
     folder = Path(folder_path)
     if not folder.exists():
         return
+    
+    store = get_vector_store()
+    
     for file_path in folder.glob("*.txt"):
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
-        upsert_text_doc(str(file_path), content, metadata={"source": str(file_path)}, persist_after=False)
-    _persist_store(get_vector_store())
+        
+        # Split document into chunks (by lines with merge logic)
+        chunks = _chunk_document_by_lines(str(file_path), content)
+        
+        for chunk_id, chunk_content, metadata in chunks:
+            # Delete old document if it exists (for re-ingestion)
+            store.delete(ids=[chunk_id], where=None)
+            
+            # Add new chunk
+            doc = Document(page_content=chunk_content, metadata=metadata)
+            store.add_documents(documents=[doc], ids=[chunk_id])
+    
+    _persist_store(store)
 
 
 def _persist_store(store: Chroma):
