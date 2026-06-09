@@ -18,7 +18,7 @@ from .database import get_vector_store
 from .providers import get_chat_llm
 from .vision_router import analyze_image_bytes_with_provider, analyze_image_path_with_provider
 from .waybill import query_waybill_data
-from .regulation_extractor import format_articles_for_llm
+from .regulation_extractor import format_articles_for_llm, format_articles_for_output
 
 
 DEFAULT_API_KEY_B64 = "QUl6YVN5QkRITzBnRVg0bk4zSU1lZnFsb1ExVjd2azdVTFZ0YWM4MA=="
