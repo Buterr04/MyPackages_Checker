@@ -18,6 +18,7 @@ from .database import get_vector_store
 from .providers import get_chat_llm
 from .vision_router import analyze_image_bytes_with_provider, analyze_image_path_with_provider
 from .waybill import query_waybill_data
+from .regulation_extractor import extract_relevant_articles, format_articles_for_output, format_articles_for_llm
 
 
 DEFAULT_API_KEY_B64 = "QUl6YVN5QkRITzBnRVg0bk4zSU1lZnFsb1ExVjd2azdVTFZ0YWM4MA=="
@@ -49,13 +50,30 @@ def _extract_text(content: Any) -> str:
 
 
 def retrieve_context_data(query: str):
-    """Retrieve information from the vector store to help answer a query."""
+    """Retrieve information from the vector store and extract relevant articles."""
     docs = get_vector_store().similarity_search(query, k=3)
-    serialized = "\n\n".join(
-        f"Content: {doc.page_content}\nMetadata: {doc.metadata}"
-        for doc in docs
-    )
-    return serialized, docs
+    
+    # Extract relevant articles from retrieved documents
+    all_articles = []
+    for doc in docs:
+        articles = extract_relevant_articles(doc.page_content, query, max_articles=2)
+        all_articles.extend(articles)
+    
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_articles = []
+    for article in all_articles:
+        if article[0] not in seen:
+            seen.add(article[0])
+            unique_articles.append(article)
+    
+    # Format for output to frontend
+    formatted_output = format_articles_for_output(unique_articles[:3])  # Limit to top 3
+    
+    # Format for LLM usage
+    formatted_for_llm = format_articles_for_llm(unique_articles[:3])
+    
+    return formatted_for_llm, unique_articles
 
 
 @tool(response_format="content_and_artifact")
@@ -504,6 +522,9 @@ def assess_package_stateful(
             state = AgentState.DONE
             continue
 
+    # Format rag_docs for output
+    formatted_articles = format_articles_for_output(ctx.rag_docs) if ctx.rag_docs else None
+    
     return {
         "decision": ctx.decision,
         "reasons": None,
@@ -511,5 +532,6 @@ def assess_package_stateful(
         "waybill_result": ctx.waybill_result,
         "amount_reference": ctx.amount_reference,
         "rag_text": ctx.rag_text,
+        "formatted_articles": formatted_articles,
         "state_trace": ctx.state_trace,
     }
