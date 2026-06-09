@@ -2,9 +2,10 @@
 
 import base64
 import os
+import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
@@ -92,15 +93,88 @@ def is_empty() -> bool:
         return False
 
 
+def _chunk_document_by_articles(file_path: str, content: str) -> List[Tuple[str, str, Dict]]:
+    """Split document into individual articles for better retrieval granularity.
+    
+    Returns: List of (chunk_id, chunk_content, metadata)
+    """
+    chunks = []
+    file_name = Path(file_path).stem
+    
+    # Pattern for "第X条" format (e.g., 第四十五条、第45条)
+    pattern = r'(第[^\s]+?条)[^\n]*\n((?:(?!第[^\s]+?条).)*?)(?=\n(?:第[^\s]+?条)|$)'
+    
+    matches = list(re.finditer(pattern, content, re.DOTALL))
+    
+    if matches:
+        # Document has numbered articles - split by article
+        for idx, match in enumerate(matches):
+            article_num = match.group(1).strip()
+            article_content = match.group(2).strip()
+            
+            if article_content:
+                chunk_id = f"{file_path}#{article_num}"
+                metadata = {
+                    "source": file_path,
+                    "source_file": file_name,
+                    "article": article_num,
+                    "chunk_type": "article",
+                    "chunk_index": idx
+                }
+                chunks.append((chunk_id, article_content, metadata))
+    else:
+        # Document has no numbered articles - split by sections or keep whole if small
+        if len(content) < 3000:
+            # Small document - keep as single chunk
+            chunk_id = f"{file_path}#full"
+            metadata = {
+                "source": file_path,
+                "source_file": file_name,
+                "chunk_type": "full_document",
+                "chunk_index": 0
+            }
+            chunks.append((chunk_id, content, metadata))
+        else:
+            # Large document - split by paragraphs
+            paragraphs = content.split('\n\n')
+            for idx, para in enumerate(paragraphs):
+                if para.strip() and len(para.strip()) > 100:
+                    chunk_id = f"{file_path}#para_{idx}"
+                    metadata = {
+                        "source": file_path,
+                        "source_file": file_name,
+                        "chunk_type": "paragraph",
+                        "chunk_index": idx
+                    }
+                    chunks.append((chunk_id, para.strip(), metadata))
+    
+    return chunks
+
+
 def ingest_txt_folder(folder_path: str):
+    """Ingest txt files from folder, splitting by articles for granular retrieval."""
     folder = Path(folder_path)
     if not folder.exists():
         return
+    
+    store = get_vector_store()
+    
     for file_path in folder.glob("*.txt"):
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
-        upsert_text_doc(str(file_path), content, metadata={"source": str(file_path)}, persist_after=False)
-    _persist_store(get_vector_store())
+        
+        # Split document into chunks (articles or sections)
+        chunks = _chunk_document_by_articles(str(file_path), content)
+        
+        for chunk_id, chunk_content, metadata in chunks:
+            # Delete old document if it exists (for re-ingestion)
+            store.delete(ids=[chunk_id], where=None)
+            
+            # Add new chunk
+            doc = Document(page_content=chunk_content, metadata=metadata)
+            store.add_documents(documents=[doc], ids=[chunk_id])
+    
+    _persist_store(store)
 
 
 def _persist_store(store: Chroma):
