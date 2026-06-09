@@ -480,13 +480,54 @@ pre {
     background: rgba(255, 255, 255, 0.08);
   }
 
-  .topbar-mobile-links a.is-active {
+.topbar-mobile-links a.is-active {
     background: rgba(255, 255, 255, 0.14);
     border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px) saturate(1.2);
     -webkit-backdrop-filter: blur(10px) saturate(1.2);
   }
 }
+
+.error-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(2, 6, 14, 0.66);
+  backdrop-filter: blur(10px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.error-modal {
+  width: min(560px, 100%);
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  background: rgba(10, 16, 28, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.error-modal-message {
+  margin: 0;
+  color: #f6f8fc;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.error-modal-detail {
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.error-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .stack {
   display: grid;
   gap: 12px;

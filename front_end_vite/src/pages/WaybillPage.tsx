@@ -1,6 +1,7 @@
 import { useState } from "react";
 import SpotlightCard from "../components/SpotlightCard";
 import Topbar from "../components/Topbar";
+import { apiFetch } from "../lib/api";
 
 function WaybillPage() {
   const [queryNo, setQueryNo] = useState("");
@@ -41,9 +42,8 @@ function WaybillPage() {
     setBusy(true);
     setQueryResult("查询中...");
     try {
-      const res = await fetch(`/waybills/${encodeURIComponent(queryNo.trim())}`);
-      const data = await res.json();
-      setQueryResult(res.ok ? JSON.stringify(data, null, 2) : data.detail || "查询失败");
+      const data = await apiFetch(`/waybills/${encodeURIComponent(queryNo.trim())}`);
+      setQueryResult(JSON.stringify(data, null, 2));
     } catch (err: any) {
       setQueryResult(err?.message || String(err));
     } finally {
@@ -59,7 +59,7 @@ function WaybillPage() {
     setBusy(true);
     setSaveResult("保存中...");
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         waybill_no: form.waybill_no.trim(),
         company: form.company.trim() || null,
         insured: parseOptionalBool(form.insured),
@@ -72,13 +72,12 @@ function WaybillPage() {
         price: form.price ? Number(form.price) : null,
         route: form.route ? form.route.split(",").map((v) => v.trim()).filter(Boolean) : null,
       };
-      const res = await fetch("/waybills", {
+      const data = await apiFetch("/waybills", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      setSaveResult(res.ok ? JSON.stringify(data, null, 2) : data.detail || "保存失败");
+      setSaveResult(JSON.stringify(data, null, 2));
     } catch (err: any) {
       setSaveResult(err?.message || String(err));
     } finally {
@@ -96,9 +95,8 @@ function WaybillPage() {
     try {
       const formData = new FormData();
       formData.append("file", excelFile);
-      const res = await fetch("/waybills/import-excel", { method: "POST", body: formData });
-      const data = await res.json();
-      setSaveResult(res.ok ? JSON.stringify(data, null, 2) : data.detail || "导入失败");
+      const data = await apiFetch("/waybills/import-excel", { method: "POST", body: formData });
+      setSaveResult(JSON.stringify(data, null, 2));
     } catch (err: any) {
       setSaveResult(err?.message || String(err));
     } finally {

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import SpotlightCard from "../components/SpotlightCard";
 import Topbar from "../components/Topbar";
+import { apiFetch } from "../lib/api";
 
 function RulesPage() {
   const [docResult, setDocResult] = useState("等待中...");
@@ -22,9 +23,8 @@ function RulesPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/docs/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      setDocResult(res.ok ? JSON.stringify(data, null, 2) : data.detail || "错误");
+      const data = await apiFetch("/docs/upload", { method: "POST", body: formData });
+      setDocResult(JSON.stringify(data, null, 2));
     } catch (err: any) {
       setDocResult(err?.message || String(err));
     } finally {
@@ -36,9 +36,8 @@ function RulesPage() {
     setIngestBusy(true);
     setDocResult("正在刷新向量库...");
     try {
-      const res = await fetch("/docs/ingest", { method: "POST" });
-      const data = await res.json();
-      setDocResult(res.ok ? JSON.stringify(data, null, 2) : data.detail || "错误");
+      const data = await apiFetch("/docs/ingest", { method: "POST" });
+      setDocResult(JSON.stringify(data, null, 2));
     } catch (err: any) {
       setDocResult(err?.message || String(err));
     } finally {
@@ -50,9 +49,8 @@ function RulesPage() {
     setListBusy(true);
     setListResult("查询中...");
     try {
-      const res = await fetch("/docs/list");
-      const data = await res.json();
-      setListResult(res.ok ? JSON.stringify(data, null, 2) : data.detail || "错误");
+      const data = await apiFetch("/docs/list");
+      setListResult(JSON.stringify(data, null, 2));
     } catch (err: any) {
       setListResult(err?.message || String(err));
     } finally {

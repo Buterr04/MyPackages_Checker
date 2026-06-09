@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import SpotlightCard from "../components/SpotlightCard";
 import Topbar from "../components/Topbar";
+import { apiFetch } from "../lib/api";
 
 type VisionResponse = {
   analysis?: unknown;
@@ -58,29 +59,21 @@ function DetectPage() {
     if (provider) formData.append("provider", provider);
 
     try {
-      const res = await fetch("/vision-assess", { method: "POST", body: formData });
-      const data = (await res.json()) as VisionResponse & { detail?: string };
-      if (res.ok) {
-        const analysis = data.analysis ?? {};
-        const raw = (analysis as any).raw ?? analysis;
-        setVisionAnalysis(raw ? JSON.stringify(raw, null, 2) : JSON.stringify(analysis, null, 2));
-        setVisionResult(data.result ?? JSON.stringify(data, null, 2));
-        if (data.annotated_image_base64) {
-          const mime = data.annotated_image_mime || "image/png";
-          setVisionAnnotatedImage(`data:${mime};base64,${data.annotated_image_base64}`);
-        }
-        if (Array.isArray(data.reasons) && data.reasons.length) {
-          setVisionReasons(data.reasons.join("; "));
-        } else if (data.rag) {
-          setVisionReasons(data.rag);
-        } else {
-          setVisionReasons("未提供依据");
-        }
+      const data = await apiFetch<VisionResponse>("/vision-assess", { method: "POST", body: formData });
+      const analysis = data.analysis ?? {};
+      const raw = (analysis as any).raw ?? analysis;
+      setVisionAnalysis(raw ? JSON.stringify(raw, null, 2) : JSON.stringify(analysis, null, 2));
+      setVisionResult(data.result ?? JSON.stringify(data, null, 2));
+      if (data.annotated_image_base64) {
+        const mime = data.annotated_image_mime || "image/png";
+        setVisionAnnotatedImage(`data:${mime};base64,${data.annotated_image_base64}`);
+      }
+      if (Array.isArray(data.reasons) && data.reasons.length) {
+        setVisionReasons(data.reasons.join("; "));
+      } else if (data.rag) {
+        setVisionReasons(data.rag);
       } else {
-        const msg = data.detail || "Error";
-        setVisionAnalysis(msg);
-        setVisionResult(msg);
-        setVisionReasons(msg);
+        setVisionReasons("未提供依据");
       }
     } catch (err: any) {
       const msg = err?.message || String(err);
