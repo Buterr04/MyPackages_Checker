@@ -93,66 +93,89 @@ def is_empty() -> bool:
         return False
 
 
-def _chunk_document_by_articles(file_path: str, content: str) -> List[Tuple[str, str, Dict]]:
-    """Split document into individual articles for better retrieval granularity.
+def _chunk_document_by_lines(file_path: str, content: str) -> List[Tuple[str, str, Dict]]:
+    """Split document into chunks by lines with merge logic.
+    
+    Strategy: Group lines together, merging small lines until reaching min size.
+    - Min chunk size: 200 characters
+    - Max chunk size: 1000 characters
+    - Preserves document structure by respecting line boundaries
     
     Returns: List of (chunk_id, chunk_content, metadata)
     """
     chunks = []
     file_name = Path(file_path).stem
     
-    # Pattern for "第X条" format (e.g., 第四十五条、第45条)
-    pattern = r'(第[^\s]+?条)[^\n]*\n((?:(?!第[^\s]+?条).)*?)(?=\n(?:第[^\s]+?条)|$)'
+    lines = content.split('\n')
+    MIN_CHUNK_SIZE = 200
+    MAX_CHUNK_SIZE = 1000
     
-    matches = list(re.finditer(pattern, content, re.DOTALL))
+    current_chunk_lines = []
+    current_chunk_size = 0
+    chunk_index = 0
     
-    if matches:
-        # Document has numbered articles - split by article
-        for idx, match in enumerate(matches):
-            article_num = match.group(1).strip()
-            article_content = match.group(2).strip()
-            
-            if article_content:
-                chunk_id = f"{file_path}#{article_num}"
-                metadata = {
-                    "source": file_path,
-                    "source_file": file_name,
-                    "article": article_num,
-                    "chunk_type": "article",
-                    "chunk_index": idx
-                }
-                chunks.append((chunk_id, article_content, metadata))
-    else:
-        # Document has no numbered articles - split by sections or keep whole if small
-        if len(content) < 3000:
-            # Small document - keep as single chunk
-            chunk_id = f"{file_path}#full"
-            metadata = {
-                "source": file_path,
-                "source_file": file_name,
-                "chunk_type": "full_document",
-                "chunk_index": 0
-            }
-            chunks.append((chunk_id, content, metadata))
-        else:
-            # Large document - split by paragraphs
-            paragraphs = content.split('\n\n')
-            for idx, para in enumerate(paragraphs):
-                if para.strip() and len(para.strip()) > 100:
-                    chunk_id = f"{file_path}#para_{idx}"
+    for line in lines:
+        line = line.rstrip()
+        line_size = len(line)
+        
+        # Skip empty lines unless they're meaningful separators
+        if not line.strip():
+            # If we have accumulated content, check if we should flush it
+            if current_chunk_lines and current_chunk_size >= MIN_CHUNK_SIZE:
+                chunk_content = '\n'.join(current_chunk_lines).strip()
+                if chunk_content:
+                    chunk_id = f"{file_path}#line_{chunk_index}"
                     metadata = {
                         "source": file_path,
                         "source_file": file_name,
-                        "chunk_type": "paragraph",
-                        "chunk_index": idx
+                        "chunk_type": "lines",
+                        "chunk_index": chunk_index
                     }
-                    chunks.append((chunk_id, para.strip(), metadata))
+                    chunks.append((chunk_id, chunk_content, metadata))
+                    chunk_index += 1
+                    current_chunk_lines = []
+                    current_chunk_size = 0
+            continue
+        
+        # Check if adding this line would exceed max size
+        if current_chunk_size + line_size + 1 > MAX_CHUNK_SIZE and current_chunk_lines:
+            # Flush current chunk
+            chunk_content = '\n'.join(current_chunk_lines).strip()
+            if chunk_content:
+                chunk_id = f"{file_path}#line_{chunk_index}"
+                metadata = {
+                    "source": file_path,
+                    "source_file": file_name,
+                    "chunk_type": "lines",
+                    "chunk_index": chunk_index
+                }
+                chunks.append((chunk_id, chunk_content, metadata))
+                chunk_index += 1
+            current_chunk_lines = []
+            current_chunk_size = 0
+        
+        # Add line to current chunk
+        current_chunk_lines.append(line)
+        current_chunk_size += line_size + 1  # +1 for newline
+    
+    # Flush remaining chunk if it meets min size
+    if current_chunk_lines:
+        chunk_content = '\n'.join(current_chunk_lines).strip()
+        if len(chunk_content) >= MIN_CHUNK_SIZE or chunk_index == 0:  # Always add first chunk
+            chunk_id = f"{file_path}#line_{chunk_index}"
+            metadata = {
+                "source": file_path,
+                "source_file": file_name,
+                "chunk_type": "lines",
+                "chunk_index": chunk_index
+            }
+            chunks.append((chunk_id, chunk_content, metadata))
     
     return chunks
 
 
 def ingest_txt_folder(folder_path: str):
-    """Ingest txt files from folder, splitting by articles for granular retrieval."""
+    """Ingest txt files from folder, splitting by lines with merge logic."""
     folder = Path(folder_path)
     if not folder.exists():
         return
@@ -163,8 +186,8 @@ def ingest_txt_folder(folder_path: str):
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
         
-        # Split document into chunks (articles or sections)
-        chunks = _chunk_document_by_articles(str(file_path), content)
+        # Split document into chunks (by lines with merge logic)
+        chunks = _chunk_document_by_lines(str(file_path), content)
         
         for chunk_id, chunk_content, metadata in chunks:
             # Delete old document if it exists (for re-ingestion)
