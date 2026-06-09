@@ -12,6 +12,8 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
+from .carriers import merge_carrier_metadata
+
 PERSIST_DIR = "chroma_store"
 COLLECTION_NAME = "foo"
 DEFAULT_API_KEY_B64 = "QUl6YVN5QkRITzBnRVg0bk4zSU1lZnFsb1ExVjd2azdVTFZ0YWM4MA=="
@@ -40,7 +42,8 @@ def add_txt_file(file_path: str):
     store = get_vector_store()
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
-    doc = Document(page_content=content, metadata={"source": file_path})
+    metadata = merge_carrier_metadata({"source": file_path}, file_path, content)
+    doc = Document(page_content=content, metadata=metadata)
     store.add_documents(documents=[doc], ids=[file_path])
 
 
@@ -56,7 +59,7 @@ def upsert_text_doc(doc_id: str, content: str, metadata: Optional[Dict] = None, 
         raise ValueError("content is required")
 
     store = get_vector_store()
-    metadata = metadata or {}
+    metadata = merge_carrier_metadata(metadata, doc_id, content)
     store.delete(ids=[doc_id])
     doc = Document(page_content=content, metadata=metadata)
     store.add_documents(documents=[doc], ids=[doc_id])
@@ -64,9 +67,12 @@ def upsert_text_doc(doc_id: str, content: str, metadata: Optional[Dict] = None, 
         _persist_store(store)
 
 
-def read_docs(query: str, k: int = 2):
+def read_docs(query: str, k: int = 2, carrier: str | None = None):
     store = get_vector_store()
-    return store.similarity_search(query=query, k=k)
+    search_kwargs = {"query": query, "k": k}
+    if carrier:
+        search_kwargs["filter"] = {"carrier": carrier}
+    return store.similarity_search(**search_kwargs)
 
 
 def update_doc(doc_id: str, new_doc: Document):
@@ -105,6 +111,15 @@ def _chunk_document_by_lines(file_path: str, content: str) -> List[Tuple[str, st
     """
     chunks = []
     file_name = Path(file_path).stem
+    base_metadata = merge_carrier_metadata(
+        {
+            "source": file_path,
+            "source_file": file_name,
+        },
+        file_name,
+        file_path,
+        content,
+    )
     
     lines = content.split('\n')
     MIN_CHUNK_SIZE = 200
@@ -126,8 +141,7 @@ def _chunk_document_by_lines(file_path: str, content: str) -> List[Tuple[str, st
                 if chunk_content:
                     chunk_id = f"{file_path}#line_{chunk_index}"
                     metadata = {
-                        "source": file_path,
-                        "source_file": file_name,
+                        **base_metadata,
                         "chunk_type": "lines",
                         "chunk_index": chunk_index
                     }
@@ -144,8 +158,7 @@ def _chunk_document_by_lines(file_path: str, content: str) -> List[Tuple[str, st
             if chunk_content:
                 chunk_id = f"{file_path}#line_{chunk_index}"
                 metadata = {
-                    "source": file_path,
-                    "source_file": file_name,
+                    **base_metadata,
                     "chunk_type": "lines",
                     "chunk_index": chunk_index
                 }
@@ -164,8 +177,7 @@ def _chunk_document_by_lines(file_path: str, content: str) -> List[Tuple[str, st
         if len(chunk_content) >= MIN_CHUNK_SIZE or chunk_index == 0:  # Always add first chunk
             chunk_id = f"{file_path}#line_{chunk_index}"
             metadata = {
-                "source": file_path,
-                "source_file": file_name,
+                **base_metadata,
                 "chunk_type": "lines",
                 "chunk_index": chunk_index
             }

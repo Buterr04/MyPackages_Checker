@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from langchain.agents import create_agent
 from langchain.messages import HumanMessage
 from langchain.tools import tool
+from .carriers import detect_carrier
 from .database import get_vector_store
 from .providers import get_chat_llm
 from .vision_router import analyze_image_bytes_with_provider, analyze_image_path_with_provider
@@ -55,14 +56,27 @@ def retrieve_context_data(query: str):
     With chunk-based ingestion, each article/section is a separate document,
     so similarity_search naturally returns article-level content.
     """
-    docs = get_vector_store().similarity_search(query, k=5)
+    store = get_vector_store()
+    carrier = detect_carrier(query)
+    search_kwargs: dict[str, Any] = {"query": query, "k": 5}
+    if carrier:
+        search_kwargs["filter"] = {"carrier": carrier}
+    docs = store.similarity_search(**search_kwargs)
+    if carrier and not docs:
+        docs = store.similarity_search(query=query, k=5)
     
     # Format articles with metadata for display
     articles = []
     for doc in docs:
         article_num = doc.metadata.get("article", "相关内容")
-        source_file = doc.metadata.get("source_file", "")
-        articles.append((article_num, doc.page_content))
+        source_file = doc.metadata.get("source_file") or doc.metadata.get("source", "")
+        carrier_name = doc.metadata.get("carrier")
+        label = article_num
+        if article_num == "相关内容" and source_file:
+            label = source_file
+        if carrier_name and carrier_name not in str(label):
+            label = f"{carrier_name} - {label}"
+        articles.append((label, doc.page_content))
     
     # Remove duplicates while preserving order
     seen = set()
